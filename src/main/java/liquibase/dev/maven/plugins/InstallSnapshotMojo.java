@@ -116,12 +116,12 @@ public class InstallSnapshotMojo extends AbstractMojo {
                 }
 
                 if (runToDownload.getStatus() != GHWorkflowRun.Status.COMPLETED) {
-                    log.debug("Skipping " + runToDownload.getStatus() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
+                    log.info("Skipping " + runToDownload.getStatus() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
                     continue;
                 }
 
                 if (runToDownload.getConclusion() != GHWorkflowRun.Conclusion.SUCCESS) {
-                    log.debug("Skipping " + runToDownload.getConclusion() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
+                    log.info("Skipping " + runToDownload.getConclusion() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
                     continue;
                 }
 
