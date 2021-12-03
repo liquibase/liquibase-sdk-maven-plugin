@@ -13,35 +13,8 @@ on:
       - main
 
 jobs:
-  setup:
-    name: Setup
-    runs-on: ubuntu-latest
-    outputs:
-      thisSha: ${{ steps.find-branches.outputs.thisSha }}
-      thisBranchName: ${{ steps.find-branches.outputs.thisBranchName }}
-      thisRepositoryName: ${{ steps.find-branches.outputs.thisRepositoryName }}
-      thisRepositoryOwner: ${{ steps.find-branches.outputs.thisRepositoryName }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.event.after}}
-
-      - name: Setup
-        id: find-branches
-        uses: actions/github-script@v5
-        with:
-          github-token: ${{ secrets.BOT_TOKEN }}
-          script: |
-            const helper = require('./.github/util/workflow-helper.js')({github, context});
-
-            core.setOutput("thisSha", helper.getCurrentSha());
-            core.setOutput("thisBranchName", helper.getCurrentBranch());
-            core.setOutput("thisRepoName", helper.getRepositoryName());
-            core.setOutput("thisRepoOwner", helper.getRepositoryOwner());
-
   build:
     name: Build & Test
-    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
