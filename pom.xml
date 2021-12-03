@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.liquibase.ext</groupId>
+    <artifactId>liquibase-dev-maven-plugin</artifactId>
+    <version>0.1-SNAPSHOT</version>
+
+    <packaging>maven-plugin</packaging>
+    <description>A Maven plugin for developing Liquibase</description>
+
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <targetMavenVersion>3.8.1</targetMavenVersion>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.kohsuke</groupId>
+            <artifactId>github-api</artifactId>
+            <version>1.301</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-plugin-api</artifactId>
+            <version>${targetMavenVersion}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-core</artifactId>
+            <version>${targetMavenVersion}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-artifact</artifactId>
+            <version>${targetMavenVersion}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven.plugin-tools</groupId>
+            <artifactId>maven-plugin-annotations</artifactId>
+            <version>3.6.2</version>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.maven.plugin-testing</groupId>
+            <artifactId>maven-plugin-testing-harness</artifactId>
+            <version>3.3.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.maven.shared</groupId>
+            <artifactId>maven-verifier</artifactId>
+            <version>1.6</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.twdata.maven</groupId>
+            <artifactId>mojo-executor</artifactId>
+            <version>2.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.1.2</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>generated-helpmojo</id>
+                        <goals>
+                            <goal>helpmojo</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mojoDependencies>
+                        <param>org.liquibase.ext:liquibase-dev-maven-plugin</param>
+                    </mojoDependencies>
+                </configuration>
+            </plugin>
+        </plugins>
+
+    </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-plugin-plugin</artifactId>
+                <version>2.6</version>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <!--    <profiles>-->
+    <!--        <profile>-->
+    <!--            <id>gpg-sign</id>-->
+    <!--            <activation>-->
+    <!--                <property>-->
+    <!--                    <name>env.GPG_PASSPHRASE</name>-->
+    <!--                </property>-->
+    <!--            </activation>-->
+    <!--            <build>-->
+    <!--                <plugins>-->
+    <!--                    <plugin>-->
+    <!--                        <artifactId>maven-gpg-plugin</artifactId>-->
+    <!--                        <version>1.6</version>-->
+    <!--                        <configuration>-->
+    <!--                            <passphrase>${env.GPG_PASSPHRASE}</passphrase>-->
+    <!--                            <gpgArguments>-->
+    <!--                                <arg>&#45;&#45;batch</arg>-->
+    <!--                                <arg>&#45;&#45;no-tty</arg>-->
+    <!--                                &lt;!&ndash; This is necessary for gpg to not try to use the pinentry programs &ndash;&gt;-->
+    <!--                                <arg>&#45;&#45;pinentry-mode</arg>-->
+    <!--                                <arg>loopback</arg>-->
+    <!--                            </gpgArguments>-->
+
+    <!--                            <skip>false</skip>-->
+    <!--                            <repositoryId>${deploy.repositoryId}</repositoryId>-->
+    <!--                            <artifactId>${project.artifactId}</artifactId>-->
+    <!--                            <version>${project.version}</version>-->
+    <!--                            <url>${deploy.url}</url>-->
+    <!--                            <file>${project.build.directory}/${project.artifactId}-${project.version}.jar</file>-->
+    <!--                            <sources>${project.build.directory}/${project.artifactId}-${project.version}-sources.jar</sources>-->
+    <!--                            <javadoc>${project.build.directory}/${project.artifactId}-${project.version}-javadoc.jar</javadoc>-->
+    <!--                            <pomFile>${project.build.directory}/release.pom.xml</pomFile>-->
+    <!--                        </configuration>-->
+    <!--                        <executions>-->
+    <!--                            <execution>-->
+    <!--                                <id>custom-deploy</id>-->
+    <!--                                <phase>deploy</phase>-->
+    <!--                                <goals>-->
+    <!--                                    <goal>sign-and-deploy-file</goal>-->
+    <!--                                </goals>-->
+    <!--                            </execution>-->
+    <!--                        </executions>-->
+    <!--                    </plugin>-->
+    <!--                </plugins>-->
+    <!--            </build>-->
+    <!--        </profile>-->
+    <!--    </profiles>-->
+</project>
+
