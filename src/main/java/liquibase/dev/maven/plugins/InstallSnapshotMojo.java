@@ -1,5 +1,6 @@
 package liquibase.dev.maven.plugins;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -20,9 +21,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.text.DateFormat;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
@@ -135,8 +140,12 @@ public class InstallSnapshotMojo extends AbstractMojo {
 
             log.info("Downloading artifacts in build #" + runToDownload.getRunNumber() + " from " + DateFormat.getDateTimeInstance().format(runToDownload.getCreatedAt()) + " -- " + runToDownload.getHtmlUrl());
 
+            File file = File.createTempFile("liquibase-artifacts-" + branch, ".zip");
+            file.deleteOnExit();
+            boolean foundArchive = false;
+
             for (GHArtifact artifact : runToDownload.listArtifacts()) {
-                if (shouldInstall(artifact)) {
+                if (artifact.getName().equals("liquibase-artifacts-" + branch)) {
                     log.info("Downloading " + artifact.getName() + "...");
 
                     final URL url = artifact.getArchiveDownloadUrl();
@@ -151,34 +160,56 @@ public class InstallSnapshotMojo extends AbstractMojo {
                                 throw new MojoExecutionException("Non-200 response: " + response.getCode() + " " + response.getReasonPhrase());
                             }
 
-                            File file = File.createTempFile(artifact.getName(), ".jar");
-                            file.deleteOnExit();
                             try (OutputStream out = new FileOutputStream(file)) {
                                 response.getEntity().writeTo(out);
                             }
-
-                            log.info("Installing " + artifact.getName() + "...");
-                            executeMojo(
-                                    plugin(
-                                            groupId("org.apache.maven.plugins"),
-                                            artifactId("maven-install-plugin"),
-                                            version("3.0.0-M1")
-                                    ),
-                                    goal("install-file"),
-                                    configuration(
-                                            element(name("file"), file.getAbsolutePath())
-                                    ),
-                                    executionEnvironment(
-                                            mavenSession,
-                                            pluginManager
-                                    )
-                            );
                         }
                     }
+                    foundArchive = true;
                 } else {
-                    log.debug("Not installing " + artifact.getName());
+                    log.debug("Not downloading " + artifact.getName());
                 }
             }
+
+            if (!foundArchive) {
+                throw new MojoFailureException("Cannot find liquibase-artifacts-" + branch + ".zip");
+            }
+
+            try (java.util.zip.ZipFile zipFile = new ZipFile(file)) {
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    if (entry.getName().endsWith(".jar")) {
+                        log.info("Installing " + entry.getName() + "...");
+
+                        File entryFile = File.createTempFile(entry.getName(), ".jar");
+                        entryFile.deleteOnExit();
+                        try (InputStream in = zipFile.getInputStream(entry);
+                             OutputStream out = new FileOutputStream(entryFile)) {
+                            IOUtils.copy(in, out);
+                        }
+                        log.debug("Saved "+entry.getName()+" as "+entryFile.getAbsolutePath());
+
+                        executeMojo(
+                                plugin(
+                                        groupId("org.apache.maven.plugins"),
+                                        artifactId("maven-install-plugin"),
+                                        version("3.0.0-M1")
+                                ),
+                                goal("install-file"),
+                                configuration(
+                                        element(name("file"), entryFile.getAbsolutePath())
+                                ),
+                                executionEnvironment(
+                                        mavenSession,
+                                        pluginManager
+                                )
+                        );
+                    }
+
+                }
+            }
+
 
             log.info("Successfully installed " + owner + "/" + repo + ":" + branch + "#" + runToDownload.getRunNumber() + " as version 0-SNAPSHOT");
 
