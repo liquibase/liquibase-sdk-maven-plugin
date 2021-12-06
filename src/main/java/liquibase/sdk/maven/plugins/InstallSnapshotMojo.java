@@ -1,4 +1,4 @@
-package liquibase.dev.maven.plugins;
+package liquibase.sdk.maven.plugins;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -49,40 +49,40 @@ public class InstallSnapshotMojo extends AbstractMojo {
     /**
      * Repository name.
      */
-    @Parameter(property = "liquibase.dev.repo", defaultValue = "liquibase")
+    @Parameter(property = "liquibase.sdk.repo", defaultValue = "liquibase")
     protected String repo;
 
     /**
      * Repository owner.
      */
-    @Parameter(property = "liquibase.dev.repo.owner", defaultValue = "liquibase")
+    @Parameter(property = "liquibase.sdk.repo.owner", defaultValue = "liquibase")
     protected String owner;
 
     /**
      * Branch name.
      */
-    @Parameter(property = "liquibase.dev.branch", defaultValue = "master")
+    @Parameter(property = "liquibase.sdk.branch", defaultValue = "master")
     protected String branch;
 
     /**
      * Github authentication token.
      */
-    @Parameter(property = "liquibase.dev.github.token")
+    @Parameter(property = "liquibase.sdk.github.token")
     protected String githubToken;
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         if (StringUtils.trimToNull(githubToken) == null) {
             throw new MojoFailureException("Missing github token\n" +
-                    "Your github token is not set in liquibase.dev.github.token.\n\n" +
+                    "Your github token is not set in liquibase.sdk.github.token.\n\n" +
                     "It can be set via any Maven property-setting mechanism, but the best is to add the following to your " + SystemUtils.getUserHome() + "/.m2/settings.xml file in the <profiles></profiles> section:\n" +
                     "\t<profile>\n" +
-                    "\t\t<id>liquibase-dev</id>\n" +
+                    "\t\t<id>liquibase-sdk</id>\n" +
                     "\t\t<activation>\n" +
                     "\t\t\t<activeByDefault>true</activeByDefault>\n" +
                     "\t\t</activation>\n" +
                     "\t\t<properties>\n" +
-                    "\t\t\t<liquibase.dev.github.token>YOUR_TOKEN</liquibase.dev.github.token>\n" +
+                    "\t\t\t<liquibase.sdk.github.token>YOUR_TOKEN</liquibase.sdk.github.token>\n" +
                     "\t\t</properties>\n" +
                     "\t</profile>\n\n" +
                     "If you do not have a GitHub personal access token, you can create one at https://github.com/settings/tokens. It needs to be assigned the 'repo' scope");
@@ -95,7 +95,7 @@ public class InstallSnapshotMojo extends AbstractMojo {
             if (github.isCredentialValid()) {
                 log.debug("Successfully connected to github");
             } else {
-                throw new MojoFailureException("Invalid github credentials. Check your liquibase.dev.token property");
+                throw new MojoFailureException("Invalid github credentials. Check your liquibase.sdk.token property");
             }
 
             GHRepository repository = github.getRepository(owner + "/" + repo);

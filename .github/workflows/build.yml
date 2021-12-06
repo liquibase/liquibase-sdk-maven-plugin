@@ -36,7 +36,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
-          name: liquibase-dev-maven-plugin-test-results
+          name: liquibase-sdk-maven-plugin-test-results
           path: |
             ./**/target/surefire-reports
             ./**/target/site
@@ -44,5 +44,5 @@ jobs:
       - name: Archive Packages
         uses: actions/upload-artifact@v2
         with:
-          name: liquibase-dev-maven-plugin-artifacts
-          path: target/liquibase-dev-maven-plugin-*.jar
+          name: liquibase-sdk-maven-plugin-artifacts
+          path: target/liquibase-sdk-maven-plugin-*.jar

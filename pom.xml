@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.liquibase.ext</groupId>
-    <artifactId>liquibase-dev-maven-plugin</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <artifactId>liquibase-sdk-maven-plugin</artifactId>
+    <version>0.5-SNAPSHOT</version>
 
     <packaging>maven-plugin</packaging>
     <description>A Maven plugin for developing Liquibase</description>
@@ -102,7 +102,7 @@
                 </executions>
                 <configuration>
                     <mojoDependencies>
-                        <param>org.liquibase.ext:liquibase-dev-maven-plugin</param>
+                        <param>org.liquibase.ext:liquibase-sdk-maven-plugin</param>
                     </mojoDependencies>
                 </configuration>
             </plugin>
