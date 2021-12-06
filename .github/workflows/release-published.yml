@@ -73,12 +73,12 @@ jobs:
           mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.0.0-M1:deploy-file \
             -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ \
             -DrepositoryId=sonatype-nexus-staging \
-            -DpomFile=liquibase-sdk-maven-plugin-${version}.pom \
+            -DpomFile=liquibase-sdk-maven-plugin-${version}.pom.xml \
             -DgeneratePom=false \
             -Dfile=liquibase-sdk-maven-plugin-${version}.jar \
             -Dsources=liquibase-sdk-maven-plugin-${version}-sources.jar \
             -Djavadoc=liquibase-sdk-maven-plugin-${version}-javadoc.jar \
-            -Dfiles=liquibase-sdk-maven-plugin-${version}.jar.asc,liquibase-sdk-maven-plugin-${version}-sources.jar.asc,liquibase-sdk-maven-plugin-${version}-javadoc.jar.asc,liquibase-sdk-maven-plugin-${version}.pom.asc \
+            -Dfiles=liquibase-sdk-maven-plugin-${version}.jar.asc,liquibase-sdk-maven-plugin-${version}-sources.jar.asc,liquibase-sdk-maven-plugin-${version}-javadoc.jar.asc,liquibase-sdk-maven-plugin-${version}.pom.xml.asc \
             -Dtypes=jar.asc,jar.asc,jar.asc,pom.asc \
             -Dclassifiers=,sources,javadoc,
 
