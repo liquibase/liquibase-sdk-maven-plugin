@@ -44,16 +44,18 @@ jobs:
         env:
           GPG_PASSWORD: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          mvn versions:set -DnewVersion=${{ needs.setup.outputs.version }}
-          mvn package
+          mvn -B versions:set -DnewVersion=${{ needs.setup.outputs.version }}
+          mvn -B package
 
           ## Extract pom
           (cd target && unzip -j liquibase-sdk-maven-plugin-${{ needs.setup.outputs.version }}.jar META-INF/maven/org.liquibase.ext/liquibase-sdk-maven-plugin/pom.xml)
           mv target/pom.xml target/liquibase-sdk-maven-plugin-${{ needs.setup.outputs.version }}.pom.xml
 
           ## Sign files
-          gpg --batch --pinentry-mode=loopback --passphrase "$GPG_PASSWORD" -ab *.jar
-          gpg --batch --pinentry-mode=loopback --passphrase "$GPG_PASSWORD" -ab *.pom.xml
+          (cd target && gpg --batch --pinentry-mode=loopback --passphrase "$GPG_PASSWORD" -ab liquibase-sdk-maven-plugin-${{ needs.setup.outputs.version }}.jar)
+          (cd target && gpg --batch --pinentry-mode=loopback --passphrase "$GPG_PASSWORD" -ab liquibase-sdk-maven-plugin-${{ needs.setup.outputs.version }}-javadoc.jar)
+          (cd target && gpg --batch --pinentry-mode=loopback --passphrase "$GPG_PASSWORD" -ab liquibase-sdk-maven-plugin-${{ needs.setup.outputs.version }}-sources.jar)
+          (cd target && gpg --batch --pinentry-mode=loopback --passphrase "$GPG_PASSWORD" -ab liquibase-sdk-maven-plugin-${{ needs.setup.outputs.version }}.pom.xml)
 
       - name: Tag repository
         run: |
