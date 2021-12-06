@@ -21,7 +21,7 @@ jobs:
             core.setOutput("version", context.payload.inputs.version);
 
       - run: |
-          echo "Creating version ${{ steps.collect-data.outputs.version }}
+          echo "Creating version ${{ steps.collect-data.outputs.version }}"
 
   draft-release:
     needs: [ setup ]
