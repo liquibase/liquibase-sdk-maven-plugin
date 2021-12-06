@@ -8,6 +8,7 @@
     <version>0-SNAPSHOT</version>
 
     <packaging>maven-plugin</packaging>
+    <name>Liquibase SDK Maven Plugin</name>
     <description>A Maven plugin for developing Liquibase</description>
 
 
