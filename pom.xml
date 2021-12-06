@@ -5,10 +5,53 @@
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-sdk-maven-plugin</artifactId>
-    <version>0.5-SNAPSHOT</version>
+    <version>0-SNAPSHOT</version>
 
     <packaging>maven-plugin</packaging>
     <description>A Maven plugin for developing Liquibase</description>
+
+
+    <url>http://www.liquibase.org</url>
+
+    <organization>
+        <name>Liquibase.org</name>
+        <url>http://www.liquibase.org</url>
+    </organization>
+
+
+    <developers>
+        <developer>
+            <id>liquibase</id>
+            <name>Liquibase Team</name>
+            <email>answers@liquibase.com</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>-6</timezone>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <name>Apache License, Version 2.0</name>
+        </license>
+    </licenses>
+
+    <issueManagement>
+        <url>https://github.com/liquibase/liquibase-sdk-maven-plugin/issues</url>
+    </issueManagement>
+
+    <ciManagement>
+        <url>https://github.com/liquibase/liquibase-sdk-maven-plugin/actions</url>
+    </ciManagement>
+
+
+    <scm>
+        <connection>scm:git:git@github.com:liquibase/liquibase-sdk-maven-plugin.git</connection>
+        <url>scm:git:git@github.com:liquibase/liquibase-sdk-maven-plugin.git</url>
+        <developerConnection>scm:git:git@github.com:liquibase/liquibase-sdk-maven-plugin.git</developerConnection>
+    </scm>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -106,8 +149,47 @@
                     </mojoDependencies>
                 </configuration>
             </plugin>
-        </plugins>
 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <attach>true</attach>
+                    <author>false</author>
+                    <doctitle>Liquibase ${version} SDK API</doctitle>
+                    <quiet>true</quiet>
+                    <doclint>none</doclint>
+                    <encoding>UTF-8</encoding>
+
+                    <includeDependencySources>false</includeDependencySources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>javadoc-default</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
     <reporting>
