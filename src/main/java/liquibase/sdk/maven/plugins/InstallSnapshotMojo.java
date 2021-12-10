@@ -47,19 +47,19 @@ public class InstallSnapshotMojo extends AbstractMojo {
     private BuildPluginManager pluginManager;
 
     /**
-     * Repository name.
+     * Github action repository name.
      */
     @Parameter(property = "liquibase.sdk.repo", defaultValue = "liquibase")
     protected String repo;
 
     /**
-     * Repository owner.
+     * Github action repository owner.
      */
     @Parameter(property = "liquibase.sdk.repo.owner", defaultValue = "liquibase")
     protected String owner;
 
     /**
-     * Branch name.
+     * Branch name. If a pull request from a fork, use the syntax `fork_owner:branch`
      */
     @Parameter(property = "liquibase.sdk.branch", defaultValue = "master")
     protected String branch;
@@ -88,7 +88,7 @@ public class InstallSnapshotMojo extends AbstractMojo {
                     "If you do not have a GitHub personal access token, you can create one at https://github.com/settings/tokens. It needs to be assigned the 'repo' scope");
         }
 
-        log.info("Looking for " + owner + "/" + repo + ":" + branch);
+        log.info("Looking for " + branch + " from a run in " + owner + "/" + repo);
 
         try {
             GitHub github = GitHub.connectUsingOAuth(githubToken);
@@ -105,9 +105,17 @@ public class InstallSnapshotMojo extends AbstractMojo {
             log.debug("Successfully found workflow " + workflow.getHtmlUrl());
             log.debug("Workflow state: " + workflow.getState());
 
+            String headBranch = branch;
+            String headOwner = "liquibase";
+            if (headBranch.contains(":")) {
+                final String[] split = headBranch.split(":", 2);
+                headOwner = split[0];
+                headBranch = split[1];
+            }
+
             log.debug("Fetching workflow runs.... ");
             final PagedIterator<GHWorkflowRun> runIterator = repository.queryWorkflowRuns()
-                    .branch(branch)
+                    .branch(headBranch)
                     .list()
                     .iterator();
             log.debug("Fetching workflow runs....COMPLETE");
@@ -117,6 +125,11 @@ public class InstallSnapshotMojo extends AbstractMojo {
             while (runIterator.hasNext()) {
                 runToDownload = runIterator.next();
                 if (runToDownload.getWorkflowId() != workflow.getId()) {
+                    continue;
+                }
+
+                if (!runToDownload.getHeadRepository().getOwnerName().equals(headOwner)) {
+                    log.info("Skipping " + headBranch + " from " + runToDownload.getHeadRepository().getOwnerName() + " because it's not from " + headOwner + "'s fork " + runToDownload.getHtmlUrl());
                     continue;
                 }
 
@@ -140,12 +153,12 @@ public class InstallSnapshotMojo extends AbstractMojo {
 
             log.info("Downloading artifacts in build #" + runToDownload.getRunNumber() + " from " + DateFormat.getDateTimeInstance().format(runToDownload.getCreatedAt()) + " -- " + runToDownload.getHtmlUrl());
 
-            File file = File.createTempFile("liquibase-artifacts-" + branch, ".zip");
+            File file = File.createTempFile("liquibase-artifacts-" + headBranch, ".zip");
             file.deleteOnExit();
             boolean foundArchive = false;
 
             for (GHArtifact artifact : runToDownload.listArtifacts()) {
-                if (artifact.getName().equals("liquibase-artifacts-" + branch)) {
+                if (artifact.getName().equals("liquibase-artifacts-" + headBranch)) {
                     log.info("Downloading " + artifact.getName() + "...");
 
                     final URL url = artifact.getArchiveDownloadUrl();
@@ -188,7 +201,7 @@ public class InstallSnapshotMojo extends AbstractMojo {
                              OutputStream out = new FileOutputStream(entryFile)) {
                             IOUtils.copy(in, out);
                         }
-                        log.debug("Saved "+entry.getName()+" as "+entryFile.getAbsolutePath());
+                        log.debug("Saved " + entry.getName() + " as " + entryFile.getAbsolutePath());
 
                         executeMojo(
                                 plugin(
@@ -211,7 +224,7 @@ public class InstallSnapshotMojo extends AbstractMojo {
             }
 
 
-            log.info("Successfully installed " + owner + "/" + repo + ":" + branch + "#" + runToDownload.getRunNumber() + " as version 0-SNAPSHOT");
+            log.info("Successfully installed " + branch + "#" + runToDownload.getRunNumber() + " as version 0-SNAPSHOT from " + owner + "/" + repo);
 
         } catch (MojoExecutionException | MojoFailureException e) {
             throw e;
