@@ -4,7 +4,7 @@ This project provides Maven-based support tools for developing and testing Liqui
 
 ## Running
 
-It can be run directly as `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.5:<goal> <args>` OR it can be added to your pom.xml file as a plugin as
+It can be run directly as `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.6:<goal> <args>` OR it can be added to your pom.xml file as a plugin as
 
 ```
    <build>
@@ -12,7 +12,7 @@ It can be run directly as `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.5:
             <plugin>
                 <groupId>org.liquibase.ext</groupId>
                 <artifactId>liquibase-sdk-maven-plugin</artifactId>
-                <version>0.5</version>
+                <version>0.6</version>
             </plugin>
         </plugins>
     </build>
@@ -28,7 +28,7 @@ If the goal requires access to Github, your personal access token must be set vi
 
 #### help
 
-Show help on available goals and options. Detailed help can be shown with `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.5:help -Ddetail=true -Dgoal=<goal-name>`
+Show help on available goals and options. Detailed help can be shown with `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.6:help -Ddetail=true -Dgoal=<goal-name>`
 
 #### install-snapshot
 
@@ -37,8 +37,8 @@ Downloads the latest build of the given branch, and installs it into your local 
 The branch to use is set via the liquibase.sdk.branch setting. To install a branch from a fork, reference it as `owner:branch-name`
 
 Examples:
-- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.5:install-snapshot "-Dliquibase.sdk.branch=local-branch"` to install the code from `liquibase/liquibase:local-branch`
-- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.5:install-snapshot "-Dliquibase.sdk.branch=fork-owner:their-branch"` to install the code from `fork-owner/liquibase:their-branch`
+- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.6:install-snapshot "-Dliquibase.sdk.branch=local-branch"` to install the code from `liquibase/liquibase:local-branch`
+- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.6:install-snapshot "-Dliquibase.sdk.branch=fork-owner:their-branch"` to install the code from `fork-owner/liquibase:their-branch`
 
 All available arguments:
 
