@@ -113,10 +113,13 @@ public class InstallSnapshotMojo extends AbstractMojo {
                 headBranch = split[1];
             }
 
+            String headBranchFilename = headBranch.replaceAll("[^a-zA-Z0-9\\-_]", "_");
+
             log.debug("Fetching workflow runs.... ");
             final PagedIterator<GHWorkflowRun> runIterator = repository.queryWorkflowRuns()
-                    .branch(headBranch)
+//                    .branch(headBranch) //filtering by branch doesn't always work. Maybe caused when rebases happen inside a branch??
                     .list()
+                    .withPageSize(25)
                     .iterator();
             log.debug("Fetching workflow runs....COMPLETE");
 
@@ -125,6 +128,10 @@ public class InstallSnapshotMojo extends AbstractMojo {
             while (runIterator.hasNext()) {
                 runToDownload = runIterator.next();
                 if (runToDownload.getWorkflowId() != workflow.getId()) {
+                    continue;
+                }
+
+                if (!runToDownload.getHeadBranch().equals(headBranch)) {
                     continue;
                 }
 
@@ -153,12 +160,12 @@ public class InstallSnapshotMojo extends AbstractMojo {
 
             log.info("Downloading artifacts in build #" + runToDownload.getRunNumber() + " from " + DateFormat.getDateTimeInstance().format(runToDownload.getCreatedAt()) + " -- " + runToDownload.getHtmlUrl());
 
-            File file = File.createTempFile("liquibase-artifacts-" + headBranch, ".zip");
+            File file = File.createTempFile("liquibase-artifacts-" + headBranchFilename, ".zip");
             file.deleteOnExit();
             boolean foundArchive = false;
 
             for (GHArtifact artifact : runToDownload.listArtifacts()) {
-                if (artifact.getName().equals("liquibase-artifacts-" + headBranch)) {
+                if (artifact.getName().equals("liquibase-artifacts-" + headBranchFilename)) {
                     log.info("Downloading " + artifact.getName() + "...");
 
                     final URL url = artifact.getArchiveDownloadUrl();
