@@ -19,10 +19,7 @@ import org.kohsuke.github.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.Enumeration;
@@ -115,44 +112,7 @@ public class InstallSnapshotMojo extends AbstractMojo {
 
             String headBranchFilename = headBranch.replaceAll("[^a-zA-Z0-9\\-_]", "_");
 
-            log.debug("Fetching workflow runs.... ");
-            final PagedIterator<GHWorkflowRun> runIterator = repository.queryWorkflowRuns()
-//                    .branch(headBranch) //filtering by branch doesn't always work. Maybe caused when rebases happen inside a branch??
-                    .list()
-                    .withPageSize(25)
-                    .iterator();
-            log.debug("Fetching workflow runs....COMPLETE");
-
-            log.debug("Finding most recent successful run...");
-            GHWorkflowRun runToDownload = null;
-            while (runIterator.hasNext()) {
-                runToDownload = runIterator.next();
-                if (runToDownload.getWorkflowId() != workflow.getId()) {
-                    continue;
-                }
-
-                if (!runToDownload.getHeadBranch().equals(headBranch)) {
-                    continue;
-                }
-
-                if (!runToDownload.getHeadRepository().getOwnerName().equals(headOwner)) {
-                    log.info("Skipping " + headBranch + " from " + runToDownload.getHeadRepository().getOwnerName() + " because it's not from " + headOwner + "'s fork " + runToDownload.getHtmlUrl());
-                    continue;
-                }
-
-                if (runToDownload.getStatus() != GHWorkflowRun.Status.COMPLETED) {
-                    log.info("Skipping " + runToDownload.getStatus() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
-                    continue;
-                }
-
-                if (runToDownload.getConclusion() != GHWorkflowRun.Conclusion.SUCCESS) {
-                    log.info("Skipping " + runToDownload.getConclusion() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
-                    continue;
-                }
-
-                log.debug("Found run " + runToDownload.getName() + ": " + runToDownload.getStatus() + " -- " + runToDownload.getConclusion() + " " + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
-                break;
-            }
+            GHWorkflowRun runToDownload = findRun(repository, workflow, headBranch, headOwner, true);
 
             if (runToDownload == null) {
                 throw new MojoFailureException("Could not find successful build for " + workflow.getHtmlUrl() + " branch " + branch);
@@ -238,6 +198,58 @@ public class InstallSnapshotMojo extends AbstractMojo {
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
+    }
+
+    private GHWorkflowRun findRun(GHRepository repository, GHWorkflow workflow, String headBranch, String headOwner, boolean recentOnly) throws IOException {
+        log.debug("Fetching recent workflow runs " + (recentOnly ? "(recent)" : "") + ".... ");
+        GHWorkflowRunQueryBuilder queryBuilder = repository.queryWorkflowRuns();
+
+        if (!recentOnly) {
+            queryBuilder = queryBuilder.branch(headBranch);
+        }
+
+        final PagedIterator<GHWorkflowRun> runIterator = queryBuilder.list()
+                .withPageSize(25)
+                .iterator();
+        log.debug("Fetching workflow runs....COMPLETE");
+
+        log.debug("Finding most recent successful run...");
+        GHWorkflowRun runToDownload = null;
+        int page = 0;
+        while (runIterator.hasNext()) {
+            if (page++ > 1 && recentOnly) {
+                //fall back to non-recent runs
+                return findRun(repository, workflow, headBranch, headOwner, false);
+            }
+
+            runToDownload = runIterator.next();
+            if (runToDownload.getWorkflowId() != workflow.getId()) {
+                continue;
+            }
+
+            if (!runToDownload.getHeadBranch().equals(headBranch)) {
+                continue;
+            }
+
+            if (!runToDownload.getHeadRepository().getOwnerName().equals(headOwner)) {
+                log.info("Skipping " + headBranch + " from " + runToDownload.getHeadRepository().getOwnerName() + " because it's not from " + headOwner + "'s fork " + runToDownload.getHtmlUrl());
+                continue;
+            }
+
+            if (runToDownload.getStatus() != GHWorkflowRun.Status.COMPLETED) {
+                log.info("Skipping " + runToDownload.getStatus() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
+                continue;
+            }
+
+            if (runToDownload.getConclusion() != GHWorkflowRun.Conclusion.SUCCESS) {
+                log.info("Skipping " + runToDownload.getConclusion() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
+                continue;
+            }
+
+            log.debug("Found run " + runToDownload.getName() + ": " + runToDownload.getStatus() + " -- " + runToDownload.getConclusion() + " " + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
+            break;
+        }
+        return runToDownload;
     }
 
     private boolean shouldInstall(GHArtifact artifact) {
