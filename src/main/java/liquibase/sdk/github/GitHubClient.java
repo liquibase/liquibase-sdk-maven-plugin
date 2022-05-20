@@ -150,10 +150,11 @@ public class GitHubClient {
         log.debug("Successfully found workflow " + workflow.getHtmlUrl());
         log.debug("Workflow state: " + workflow.getState());
 
-        return findRun(repository, workflow, buildFilter, true);
+        return findRun(repository, workflow, buildFilter, true, null);
     }
 
-    private GHWorkflowRun findRun(GHRepository repository, GHWorkflow workflow, BuildFilter buildFilter, boolean recentOnly) throws IOException {
+    private GHWorkflowRun findRun(GHRepository repository, GHWorkflow workflow, BuildFilter buildFilter, boolean recentOnly, GHWorkflowRun foundFailedRun) throws IOException {
+
         log.debug("Fetching recent workflow runs " + (recentOnly ? "(recent)" : "") + ".... ");
         GHWorkflowRunQueryBuilder queryBuilder = repository.queryWorkflowRuns();
 
@@ -172,10 +173,14 @@ public class GitHubClient {
         while (runIterator.hasNext()) {
             if (page++ > 1 && recentOnly) {
                 //fall back to non-recent runs
-                return findRun(repository, workflow, buildFilter, false);
+                return findRun(repository, workflow, buildFilter, false, foundFailedRun);
             }
 
             runToDownload = runIterator.next();
+            if (foundFailedRun != null && foundFailedRun.getId() == runToDownload.getId()) {
+                continue;
+            }
+
             if (runToDownload.getWorkflowId() != workflow.getId()) {
                 continue;
             }
@@ -194,19 +199,39 @@ public class GitHubClient {
                 continue;
             }
 
-            if (runToDownload.getConclusion() != GHWorkflowRun.Conclusion.SUCCESS) {
+            if (runToDownload.getConclusion() == GHWorkflowRun.Conclusion.SUCCESS) {
+                return runToDownload;
+            } else {
                 if (buildFilter.skipFailedBuilds) {
+                    log.debug("Found run " + runToDownload.getName() + ": " + runToDownload.getStatus() + " -- " + runToDownload.getConclusion() + " " + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
                     log.info("Skipping unsuccessful " + runToDownload.getConclusion() + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
-                    continue;
                 } else {
-                    throw new IOException("Latest build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl() + " failed");
+                    //somtimes there are multiple runs for a single build, find one of them that failed by continuing to search builds until we get one that failed from a different run
+                    if (foundFailedRun == null) {
+                        //first failure we've seen from this run. Mark that we've seen it
+                        log.debug("Found failed run "+runToDownload.getId()+" but seeing if there is another build in the same run that passed...");
+                        foundFailedRun = runToDownload;
+                    } else if (foundFailedRun.getRunNumber() == runToDownload.getRunNumber()){
+                        if (foundFailedRun.getHeadCommit().getId().equals(runToDownload.getHeadCommit().getId())) {
+                            break; //moved on to older builds
+                        } else {
+                            log.debug("Found another failed run for "+runToDownload.getRunNumber());
+                        }
+                    }
                 }
             }
-
-            log.debug("Found run " + runToDownload.getName() + ": " + runToDownload.getStatus() + " -- " + runToDownload.getConclusion() + " " + " build #" + runToDownload.getRunNumber() + " " + runToDownload.getHtmlUrl());
-            break;
         }
-        return runToDownload;
+
+        if (foundFailedRun == null) {
+            return null;
+        } else {
+            if (buildFilter.skipFailedBuilds) {
+                throw new IOException("Latest build #" + foundFailedRun + " " + foundFailedRun.getHtmlUrl() + " failed");
+            } else {
+                log.debug("Found run " + foundFailedRun.getName() + ": " + foundFailedRun.getStatus() + " -- " + foundFailedRun.getConclusion() + " " + " build #" + foundFailedRun.getRunNumber() + " " + foundFailedRun.getHtmlUrl());
+                return foundFailedRun;
+            }
+        }
     }
 
     public File downloadArtifact(String repo, String branchLabel, String artifactName, boolean skipFailedBuilds) throws IOException {
