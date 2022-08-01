@@ -33,6 +33,8 @@ public class SetCommitStatusMojo extends AbstractGitHubMojo {
 
     public void execute() throws MojoExecutionException {
         try {
+            String repo = getRepo();
+
             GitHubClient github = createGitHubClient();
 
             final Properties buildInfo = github.getInstalledBuildProperties();

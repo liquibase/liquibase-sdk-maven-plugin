@@ -25,6 +25,7 @@ public class FindMatchingBranchMojo extends AbstractGitHubMojo {
 
     public void execute() throws MojoExecutionException {
 
+        String repo = getRepo();
         log.info("Looking for " + branchSearch + " in " + repo);
 
         try {

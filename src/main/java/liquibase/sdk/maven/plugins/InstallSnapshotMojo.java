@@ -44,63 +44,75 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
 
     public void execute() throws MojoExecutionException, MojoFailureException {
 
-        log.info("Looking for " + branchSearch + " from a run in " +  repo);
+        for (String repo : getRepos()) {
+            log.info("Looking for " + branchSearch + " from a run in " + repo);
 
-        try {
-            GitHubClient github = new GitHubClient(githubToken, log);
+            try {
+                GitHubClient github = new GitHubClient(githubToken, log);
 
-            String matchingLabel = github.findMatchingBranch(repo, branchSearch);
-            log.info("Found matching branch: " + matchingLabel);
+                String matchingLabel = github.findMatchingBranch(repo, branchSearch);
+                if (matchingLabel == null) {
+                    throw new MojoFailureException("Could not find matching branch(es): " + branchSearch + " in " + repo);
+                }
+                log.info("Found matching branch: " + matchingLabel);
 
-            String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-_]", "_");
+                final String artifactName;
+                if (repo.equals("liquibase")) {
+                    String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-_]", "_");
+                    artifactName = "liquibase-artifacts-" + headBranchFilename;
+                } else if (repo.equals("liquibase-pro")) {
+                    artifactName = "liquibase-commercial-modules";
+                } else {
+                    throw new MojoExecutionException("Unknown repo: "+repo);
+                }
 
-            final String artifactName = "liquibase-artifacts-" + headBranchFilename;
-            File file = github.downloadArtifact(repo, matchingLabel, artifactName, skipFailedBuilds);
+                File file = github.downloadArtifact(repo, matchingLabel, artifactName, skipFailedBuilds);
 
-            if (file == null) {
-                throw new MojoFailureException("Cannot find " + artifactName + ".zip");
-            }
-            file.deleteOnExit();
+                if (file == null) {
+                    throw new MojoFailureException("Cannot find " + artifactName + ".zip");
+                }
+                file.deleteOnExit();
 
-            try (java.util.zip.ZipFile zipFile = new ZipFile(file)) {
-                Enumeration<? extends ZipEntry> entries = zipFile.entries();
-                while (entries.hasMoreElements()) {
-                    ZipEntry entry = entries.nextElement();
-                    if (entry.getName().endsWith(".jar")) {
-                        log.info("Installing " + entry.getName() + "...");
+                try (java.util.zip.ZipFile zipFile = new ZipFile(file)) {
+                    Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                    while (entries.hasMoreElements()) {
+                        ZipEntry entry = entries.nextElement();
+                        if (entry.getName().endsWith(".jar")) {
+                            log.info("Installing " + entry.getName() + "...");
 
-                        File entryFile = File.createTempFile(entry.getName(), ".jar");
-                        entryFile.deleteOnExit();
-                        try (InputStream in = zipFile.getInputStream(entry);
-                             OutputStream out = new FileOutputStream(entryFile)) {
-                            IOUtils.copy(in, out);
+                            File entryFile = File.createTempFile(entry.getName(), ".jar");
+                            entryFile.deleteOnExit();
+                            try (InputStream in = zipFile.getInputStream(entry);
+                                 OutputStream out = new FileOutputStream(entryFile)) {
+                                IOUtils.copy(in, out);
+                            }
+                            log.debug("Saved " + entry.getName() + " as " + entryFile.getAbsolutePath());
+
+                            executeMojo(
+                                    plugin(
+                                            groupId("org.apache.maven.plugins"),
+                                            artifactId("maven-install-plugin"),
+                                            version("3.0.0-M1")
+                                    ),
+                                    goal("install-file"),
+                                    configuration(
+                                            element(name("file"), entryFile.getAbsolutePath())
+                                    ),
+                                    executionEnvironment(
+                                            mavenSession,
+                                            pluginManager
+                                    )
+                            );
                         }
-                        log.debug("Saved " + entry.getName() + " as " + entryFile.getAbsolutePath());
-
-                        executeMojo(
-                                plugin(
-                                        groupId("org.apache.maven.plugins"),
-                                        artifactId("maven-install-plugin"),
-                                        version("3.0.0-M1")
-                                ),
-                                goal("install-file"),
-                                configuration(
-                                        element(name("file"), entryFile.getAbsolutePath())
-                                ),
-                                executionEnvironment(
-                                        mavenSession,
-                                        pluginManager
-                                )
-                        );
                     }
                 }
-            }
 
-            log.info("Successfully installed " + branchSearch + " as version 0-SNAPSHOT from " + repo);
-        } catch (MojoExecutionException | MojoFailureException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new MojoExecutionException(e.getMessage(), e);
+                log.info("Successfully installed " + branchSearch + " as version 0-SNAPSHOT from " + repo);
+            } catch (MojoExecutionException | MojoFailureException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new MojoExecutionException(e.getMessage(), e);
+            }
         }
     }
 }

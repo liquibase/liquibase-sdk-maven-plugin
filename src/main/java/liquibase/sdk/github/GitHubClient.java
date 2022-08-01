@@ -189,7 +189,7 @@ public class GitHubClient {
                 continue;
             }
 
-            if (!runToDownload.getHeadRepository().getOwnerName().equals(buildFilter.getFork())) {
+            if (!repository.getName().equals("liquibase-pro") && !runToDownload.getHeadRepository().getOwnerName().equals(buildFilter.getFork())) {
                 log.info("Skipping " + buildFilter.getBranch() + " from " + runToDownload.getHeadRepository().getOwnerName() + " because it's not from " + buildFilter.fork + "'s fork " + runToDownload.getHtmlUrl());
                 continue;
             }
@@ -235,7 +235,7 @@ public class GitHubClient {
     }
 
     public File downloadArtifact(String repo, String branchLabel, String artifactName, boolean skipFailedBuilds) throws IOException {
-        GHWorkflowRun runToDownload = this.findLastBuild(repo, new GitHubClient.BuildFilter(branchLabel, skipFailedBuilds));
+        GHWorkflowRun runToDownload = this.findLastBuild(repo, new GitHubClient.BuildFilter(repo, branchLabel, skipFailedBuilds));
 
         if (runToDownload == null) {
             throw new IOException("Could not find successful build for branch " + branchLabel);
@@ -322,10 +322,16 @@ public class GitHubClient {
         /**
          * Branch can be either the branch name without a fork, or in `fork:branchName` format.
          */
-        public BuildFilter(String branch, boolean skipFailedBuilds) {
+        public BuildFilter(String repo, String branch, boolean skipFailedBuilds) {
             this.skipFailedBuilds = skipFailedBuilds;
             this.branch = branch;
-            this.fork = "liquibase";
+            this.fork = repo;
+            if (this.fork.contains("/")) {
+                this.fork = repo.split("/")[1];
+            }
+            if (!this.fork.equals("liquibase-pro")) {
+                this.fork = "liquibase";
+            }
 
             if (this.branch.contains(":")) {
                 final String[] split = this.branch.split(":", 2);

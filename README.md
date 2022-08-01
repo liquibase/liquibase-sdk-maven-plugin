@@ -30,6 +30,27 @@ If the goal requires access to Github, your personal access token must be set vi
 
 Show help on available goals and options. Detailed help can be shown with `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.9:help -Ddetail=true -Dgoal=<goal-name>`
 
+#### install-snapshot-cli
+
+Downloads the latest build of the given branch, and either installs a new Liquibase or upgrades an existing installation with it.
+
+By default, it expects it to be an upgrade, unless `allowInstall` / `liquibase.sdk.allowInstall` is set to true.
+
+The branch to use is set via the liquibase.sdk.branchSearch setting. To install a branch from a fork, reference it as `owner:branch-name`
+
+Examples:
+- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.9:install-cli "-Dliquibase.sdk.branchSearch=local-branch,master"` to install the code from `liquibase/liquibase:local-branch` and if that branch doesn't exist fall back to `master`
+- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.9:install-cli "-Dliquibase.sdk.branchSearch=fork-owner:their-branch"` to install the code from `fork-owner/liquibase:their-branch`
+
+All available arguments:
+
+- liquibase.sdk.branchSearch
+- liquibase.sdk.skipFailedBuilds (default: false)
+- liquibase.sdk.allowInstall (default: false) Allow installation to a new liquibase_home. When false, it throws an exception if the target directory is not an existing liquibase installation.
+- liquibase.sdk.github.token
+- liquibase.sdk.repo can be `liquibase/liquibase` or `liquibase/liquibase-pro`. Without an org, it assumes `liquibase`. It can be a comma separated list like `liquibase,liquibase-pro`
+
+
 #### install-snapshot
 
 Downloads the latest build of the given branch, and installs it into your local Maven repository as version `0-SNAPSHOT`.
@@ -45,7 +66,7 @@ All available arguments:
 - liquibase.sdk.branchSearch
 - liquibase.sdk.skipFailedBuilds (default: false)
 - liquibase.sdk.github.token
-- liquibase.sdk.repo can be `liquibase/liquibase` or `liquibase/liquibase-pro`
+- liquibase.sdk.repo can be `liquibase/liquibase` or `liquibase/liquibase-pro`. Without an org, it assumes `liquibase`. It can be a comma separated list like `liquibase,liquibase-pro`
 
 #### find-matching-branch
 
