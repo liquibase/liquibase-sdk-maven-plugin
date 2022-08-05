@@ -2,11 +2,8 @@ package liquibase.sdk.maven.plugins;
 
 import liquibase.sdk.github.GitHubClient;
 import org.apache.commons.io.IOUtils;
-import org.apache.maven.execution.MavenSession;
-import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
-import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
@@ -18,20 +15,12 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
-
 
 /**
  * <p>Installs a snapshot build from the given branch as "0-SNAPSHOT".</p>
  */
 @Mojo(name = "install-snapshot")
 public class InstallSnapshotMojo extends AbstractGitHubMojo {
-
-    @Component
-    private MavenSession mavenSession;
-
-    @Component
-    private BuildPluginManager pluginManager;
 
     /**
      * Branch name. If a pull request from a fork, use the syntax `fork_owner:branch`
@@ -63,7 +52,7 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                 } else if (repo.equals("liquibase-pro")) {
                     artifactName = "liquibase-commercial-modules";
                 } else {
-                    throw new MojoExecutionException("Unknown repo: "+repo);
+                    throw new MojoExecutionException("Unknown repo: " + repo);
                 }
 
                 File file = github.downloadArtifact(repo, matchingLabel, artifactName, skipFailedBuilds);
@@ -88,21 +77,7 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                             }
                             log.debug("Saved " + entry.getName() + " as " + entryFile.getAbsolutePath());
 
-                            executeMojo(
-                                    plugin(
-                                            groupId("org.apache.maven.plugins"),
-                                            artifactId("maven-install-plugin"),
-                                            version("3.0.0-M1")
-                                    ),
-                                    goal("install-file"),
-                                    configuration(
-                                            element(name("file"), entryFile.getAbsolutePath())
-                                    ),
-                                    executionEnvironment(
-                                            mavenSession,
-                                            pluginManager
-                                    )
-                            );
+                            installToMavenCache(entryFile);
                         }
                     }
                 }
