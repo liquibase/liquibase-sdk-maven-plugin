@@ -53,7 +53,7 @@ public class InstallReleaseCliMojo extends AbstractGitHubMojo {
         String version = releaseTag.replaceFirst("^v", "");
 
         for (String repo : getRepos()) {
-            if (repo.equals("liquibase-pro")) {
+            if (repo.equals("liquibase/eliquibase-pro")) {
                 log.debug("Nothing to install from liquibase-pro");
                 continue;
             }

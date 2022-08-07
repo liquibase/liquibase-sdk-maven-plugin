@@ -40,7 +40,7 @@ public class DownloadReleaseArtifactsMojo extends AbstractGitHubMojo {
         }
 
         for (String repo : getRepos()) {
-            if (repo.endsWith("liquibase-pro")) {
+            if (repo.equals("liquibase/liquibase-pro")) {
                 log.debug("No releases in liquibase-pro");
                 continue;
             }

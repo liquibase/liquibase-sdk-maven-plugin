@@ -63,7 +63,7 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
                 }
                 log.info("Found matching branch: " + matchingLabel);
 
-                if (repo.equals("liquibase")) {
+                if (repo.endsWith("/liquibase")) {
                     //replace everything in the CLI except liquibase-commercial.jar
                     String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-_]", "_");
 

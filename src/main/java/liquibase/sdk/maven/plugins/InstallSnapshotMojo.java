@@ -46,10 +46,10 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                 log.info("Found matching branch: " + matchingLabel);
 
                 final String artifactName;
-                if (repo.equals("liquibase")) {
+                if (repo.endsWith("/liquibase")) {
                     String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-_]", "_");
                     artifactName = "liquibase-artifacts-" + headBranchFilename;
-                } else if (repo.equals("liquibase-pro")) {
+                } else if (repo.equals("liquibase/liquibase-pro")) {
                     artifactName = "liquibase-commercial-modules";
                 } else {
                     throw new MojoExecutionException("Unknown repo: " + repo);

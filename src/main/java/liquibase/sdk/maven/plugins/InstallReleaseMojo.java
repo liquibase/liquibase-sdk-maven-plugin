@@ -19,7 +19,7 @@ public class InstallReleaseMojo extends AbstractGitHubMojo {
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         for (String repo : getRepos()) {
-            if (repo.endsWith("liquibase-pro")) {
+            if (repo.equals("liquibase/liquibase-pro")) {
                 log.debug("Nothing to install from liquibase-pro");
                 continue;
             }

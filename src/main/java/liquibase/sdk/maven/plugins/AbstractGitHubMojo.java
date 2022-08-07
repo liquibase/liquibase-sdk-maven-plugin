@@ -54,7 +54,9 @@ abstract class AbstractGitHubMojo extends AbstractMojo {
     protected List<String> getRepos() {
         List<String> returnList = new ArrayList<>();
         for (String name : repo.split(",")) {
-
+            if (!name.contains("/")) {
+                name = "liquibase/" + name;
+            }
             returnList.add(name);
         }
         return returnList;
