@@ -1,14 +1,21 @@
 package liquibase.sdk.maven.plugins;
 
 import liquibase.sdk.github.GitHubClient;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
+import org.apache.maven.plugin.BuildPluginManager;
+import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.twdata.maven.mojoexecutor.MojoExecutor.*;
 
 abstract class AbstractGitHubMojo extends AbstractMojo {
 
@@ -18,6 +25,12 @@ abstract class AbstractGitHubMojo extends AbstractMojo {
     public AbstractGitHubMojo() {
         this.log = LoggerFactory.getLogger(getClass());
     }
+
+    @Component
+    private MavenSession mavenSession;
+
+    @Component
+    private BuildPluginManager pluginManager;
 
     /**
      * Github authentication token.
@@ -41,7 +54,9 @@ abstract class AbstractGitHubMojo extends AbstractMojo {
     protected List<String> getRepos() {
         List<String> returnList = new ArrayList<>();
         for (String name : repo.split(",")) {
-
+            if (!name.contains("/")) {
+                name = "liquibase/" + name;
+            }
             returnList.add(name);
         }
         return returnList;
@@ -58,5 +73,23 @@ abstract class AbstractGitHubMojo extends AbstractMojo {
             throw new IllegalArgumentException("Goal does not support multiple repos");
         }
         return repos.get(0);
+    }
+
+    protected void installToMavenCache(File entryFile) throws MojoExecutionException {
+        executeMojo(
+                plugin(
+                        groupId("org.apache.maven.plugins"),
+                        artifactId("maven-install-plugin"),
+                        version("3.0.0-M1")
+                ),
+                goal("install-file"),
+                configuration(
+                        element(name("file"), entryFile.getAbsolutePath())
+                ),
+                executionEnvironment(
+                        mavenSession,
+                        pluginManager
+                )
+        );
     }
 }

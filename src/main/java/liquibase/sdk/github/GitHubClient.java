@@ -60,6 +60,11 @@ public class GitHubClient {
         }
     }
 
+    public GHRelease getRelease(String repo, String tagName) throws IOException {
+        GHRepository repository = getRepository(repo);
+        log.debug("Successfully found repository " + repository.getHtmlUrl());
+        return repository.getReleaseByTagName(tagName);
+    }
 
     /**
      * Returns null if no builds match
@@ -209,13 +214,13 @@ public class GitHubClient {
                     //somtimes there are multiple runs for a single build, find one of them that failed by continuing to search builds until we get one that failed from a different run
                     if (foundFailedRun == null) {
                         //first failure we've seen from this run. Mark that we've seen it
-                        log.debug("Found failed run "+runToDownload.getId()+" but seeing if there is another build in the same run that passed...");
+                        log.debug("Found failed run " + runToDownload.getId() + " but seeing if there is another build in the same run that passed...");
                         foundFailedRun = runToDownload;
-                    } else if (foundFailedRun.getRunNumber() == runToDownload.getRunNumber()){
+                    } else if (foundFailedRun.getRunNumber() == runToDownload.getRunNumber()) {
                         if (foundFailedRun.getHeadCommit().getId().equals(runToDownload.getHeadCommit().getId())) {
                             break; //moved on to older builds
                         } else {
-                            log.debug("Found another failed run for "+runToDownload.getRunNumber());
+                            log.debug("Found another failed run for " + runToDownload.getRunNumber());
                         }
                     }
                 }
@@ -244,38 +249,50 @@ public class GitHubClient {
 
         log.info("Downloading artifacts in build #" + runToDownload.getRunNumber() + " originally ran at " + DateFormat.getDateTimeInstance().format(runToDownload.getCreatedAt()) + " -- " + runToDownload.getHtmlUrl());
 
-        File file = File.createTempFile(artifactName, ".zip");
-
         for (GHArtifact artifact : runToDownload.listArtifacts()) {
             if (artifact.getName().equals(artifactName)) {
                 log.info("Downloading " + artifact.getName() + "...");
 
                 final URL url = artifact.getArchiveDownloadUrl();
 
-                //archive.download() threw timeout errors too often. So using httpClient instead
-                try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-                    HttpGet httpGet = new HttpGet(url.toURI());
-                    httpGet.addHeader("Authorization", "token " + githubToken);
-
-                    try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
-                        if (response.getCode() != 200) {
-                            throw new IOException("Non-200 response: " + response.getCode() + " " + response.getReasonPhrase());
-                        }
-
-                        try (OutputStream out = new FileOutputStream(file)) {
-                            response.getEntity().writeTo(out);
-                        }
-                    }
-                } catch (URISyntaxException e) {
-                    throw new IOException(e);
-                }
-                return file;
+                return downloadArtifact(url);
             } else {
                 log.debug("Not downloading " + artifact.getName());
             }
         }
 
         return null;
+    }
+
+    public File downloadArtifact(URL url) throws IOException {
+        String extension = url.getPath().replaceFirst(".*\\.", "");
+        if (extension.equals(url.getPath())) {
+            if (url.getPath().endsWith("/zip")) {
+                extension = "zip";
+            } else {
+                extension = "tmp";
+            }
+        }
+        File file = File.createTempFile("liquibase-sdk-" + url.getPath().replaceFirst(".*/", "").replaceAll("\\W", "_") + "-", "." + extension);
+
+        //archive.download() threw timeout errors too often. So using httpClient instead
+        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
+            HttpGet httpGet = new HttpGet(url.toURI());
+            httpGet.addHeader("Authorization", "token " + githubToken);
+
+            try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
+                if (response.getCode() != 200) {
+                    throw new IOException("Non-200 response: " + response.getCode() + " " + response.getReasonPhrase());
+                }
+
+                try (OutputStream out = new FileOutputStream(file)) {
+                    response.getEntity().writeTo(out);
+                }
+            }
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+        return file;
     }
 
     public void setCommitStatus(String repo, String sha1, GHCommitState statusState, String statusContext, String statusDescription, String statusUrl) throws IOException {
