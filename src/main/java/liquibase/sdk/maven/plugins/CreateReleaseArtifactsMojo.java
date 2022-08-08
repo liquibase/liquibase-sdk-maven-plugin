@@ -97,13 +97,13 @@ public class CreateReleaseArtifactsMojo extends AbstractMojo {
                 cleanupWorkDir(workDir);
 
                 signFiles(outputDirectory);
-
-                createAdditionalZip(outputDirectory);
             }
 
             if (fixedFiles == 0) {
                 throw new MojoFailureException("Found no files to release");
             }
+
+            createAdditionalZip(outputDirectory);
 
         } catch (MojoExecutionException | MojoFailureException e) {
             throw e;
