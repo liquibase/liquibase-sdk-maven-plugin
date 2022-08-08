@@ -21,7 +21,8 @@ class GitHubClientTest extends Specification {
 
         def mockGitHub = Mock(GitHub)
         def mockRepository = Mock(GHRepository)
-        mockRepository.getName() >> "liquibase"
+        mockRepository.getName() >> "liquibase-test"
+        mockRepository.getOwnerName() >> "liquibase"
         mockRepository.getHtmlUrl() >> new URL("http://example.com/mock")
 
         mockRepository.getBranch(_ as String) >> { args ->
