@@ -45,6 +45,9 @@ public class CreateReleaseArtifactsMojo extends AbstractMojo {
     @Parameter(property = "liquibase.sdk.repo", required = true)
     protected String repo;
 
+    @Parameter(property = "liquibase.sdk.gpgExecutable")
+    protected String gpgExecutable;
+
     @Parameter(property = "liquibase.sdk.reversion.requireCaseSensitiveFilesystem", defaultValue = "true")
     protected boolean requireCaseSensitiveFilesystem;
 
@@ -76,7 +79,9 @@ public class CreateReleaseArtifactsMojo extends AbstractMojo {
 
             File[] inputJarFiles = inputDirectory.listFiles(pathname -> pathname.getName().endsWith(".jar") && pathname.getName().contains("0-SNAPSHOT"));
 
+            int fixedFiles = 0;
             for (File inputFile : inputJarFiles) {
+                fixedFiles++;
                 File outputFile = new File(outputDirectory, inputFile.getName().replace("0-SNAPSHOT", newVersion));
                 File workDir = File.createTempFile("liquibase-reversion-workdir-", ".dir");
                 workDir.delete();
@@ -94,6 +99,10 @@ public class CreateReleaseArtifactsMojo extends AbstractMojo {
                 signFiles(outputDirectory);
 
                 createAdditionalZip(outputDirectory);
+            }
+
+            if (fixedFiles == 0) {
+                throw new MojoFailureException("Found no files to release");
             }
 
         } catch (MojoExecutionException | MojoFailureException e) {
@@ -261,7 +270,8 @@ public class CreateReleaseArtifactsMojo extends AbstractMojo {
                 getLog().info("Created " + sha1File);
             }
 
-            GPGUtil.sign(file.getAbsolutePath());
+            getLog().info("Signing " + file.getAbsolutePath());
+            GPGUtil.sign(file.getAbsolutePath(), gpgExecutable);
         }
     }
 
