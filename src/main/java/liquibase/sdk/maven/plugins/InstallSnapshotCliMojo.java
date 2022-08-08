@@ -32,6 +32,9 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
     @Parameter(property = "liquibase.sdk.allowInstall", defaultValue = "false")
     protected boolean allowInstall;
 
+    @Parameter(property = "liquibase.sdk.workflowId")
+    protected String workflowId;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         File liquibaseHomeDir = new File(liquibaseHome);
         if (liquibaseHomeDir.exists()) {
@@ -101,7 +104,7 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
     }
 
     private File downloadArtifact(GitHubClient github, String repo, String matchingLabel, String artifactName) throws IOException, MojoFailureException {
-        File file = github.downloadArtifact(repo, matchingLabel, artifactName, skipFailedBuilds);
+        File file = github.downloadArtifact(repo, matchingLabel, artifactName, getWorkflowId(repo, workflowId), skipFailedBuilds);
 
         if (file == null) {
             throw new MojoFailureException("Cannot find " + artifactName + ".zip");

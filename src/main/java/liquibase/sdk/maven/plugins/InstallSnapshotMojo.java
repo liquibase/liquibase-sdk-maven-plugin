@@ -31,6 +31,9 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
     @Parameter(property = "liquibase.sdk.skipFailedBuilds", defaultValue = "false")
     protected Boolean skipFailedBuilds;
 
+    @Parameter(property = "liquibase.sdk.workflowId")
+    protected String workflowId;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         for (String repo : getRepos()) {
@@ -52,10 +55,10 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                 } else if (repo.equals("liquibase/liquibase-pro")) {
                     artifactName = "liquibase-commercial-modules";
                 } else {
-                    throw new MojoExecutionException("Unknown repo: " + repo);
+                    artifactName = repo.replaceFirst(".*/", "") + "-artifacts";
                 }
 
-                File file = github.downloadArtifact(repo, matchingLabel, artifactName, skipFailedBuilds);
+                File file = github.downloadArtifact(repo, matchingLabel, artifactName, getWorkflowId(repo, workflowId), skipFailedBuilds);
 
                 if (file == null) {
                     throw new MojoFailureException("Cannot find " + artifactName + ".zip");
@@ -66,10 +69,10 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                     Enumeration<? extends ZipEntry> entries = zipFile.entries();
                     while (entries.hasMoreElements()) {
                         ZipEntry entry = entries.nextElement();
-                        if (entry.getName().endsWith(".jar")) {
+                        if (entry.getName().endsWith(".jar") && !entry.getName().contains("-javadoc") && !entry.getName().contains("-sources")) {
                             log.info("Installing " + entry.getName() + "...");
 
-                            File entryFile = File.createTempFile(entry.getName(), ".jar");
+                            File entryFile = File.createTempFile(entry.getName()+"-", ".jar");
                             entryFile.deleteOnExit();
                             try (InputStream in = zipFile.getInputStream(entry);
                                  OutputStream out = new FileOutputStream(entryFile)) {

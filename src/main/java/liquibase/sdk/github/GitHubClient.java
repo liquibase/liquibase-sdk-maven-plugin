@@ -93,7 +93,7 @@ public class GitHubClient {
             for (String branchVariation : branchVariations) {
                 if (useLocalBranch(branchVariation)) {
                     try {
-                        return repository.getName() + ":" + repository.getBranch(branchVariation).getName();
+                        return repository.getOwnerName() + ":" + repository.getBranch(branchVariation).getName();
                     } catch (GHFileNotFoundException e) {
                         log.info("No branch '" + branchVariation + "' in " + repository.getHtmlUrl());
                     }
@@ -147,11 +147,11 @@ public class GitHubClient {
     /**
      * Returns null if no builds match
      */
-    public GHWorkflowRun findLastBuild(String repo, BuildFilter buildFilter) throws IOException {
+    public GHWorkflowRun findLastBuild(String repo, BuildFilter buildFilter, String workflowId) throws IOException {
         GHRepository repository = getRepository(repo);
         log.debug("Successfully found repository " + repository.getHtmlUrl());
 
-        final GHWorkflow workflow = repository.getWorkflow("build.yml");
+        final GHWorkflow workflow = repository.getWorkflow(workflowId);
         log.debug("Successfully found workflow " + workflow.getHtmlUrl());
         log.debug("Workflow state: " + workflow.getState());
 
@@ -194,7 +194,7 @@ public class GitHubClient {
                 continue;
             }
 
-            if (!repository.getName().equals("liquibase-pro") && !runToDownload.getHeadRepository().getOwnerName().equals(buildFilter.getFork())) {
+            if (!runToDownload.getHeadRepository().getOwnerName().equals(buildFilter.fork)) {
                 log.info("Skipping " + buildFilter.getBranch() + " from " + runToDownload.getHeadRepository().getOwnerName() + " because it's not from " + buildFilter.fork + "'s fork " + runToDownload.getHtmlUrl());
                 continue;
             }
@@ -239,8 +239,8 @@ public class GitHubClient {
         }
     }
 
-    public File downloadArtifact(String repo, String branchLabel, String artifactName, boolean skipFailedBuilds) throws IOException {
-        GHWorkflowRun runToDownload = this.findLastBuild(repo, new GitHubClient.BuildFilter(repo, branchLabel, skipFailedBuilds));
+    public File downloadArtifact(String repo, String branchLabel, String artifactName, String workflowId, boolean skipFailedBuilds) throws IOException {
+        GHWorkflowRun runToDownload = this.findLastBuild(repo, new GitHubClient.BuildFilter(repo, branchLabel, skipFailedBuilds), workflowId);
 
         if (runToDownload == null) {
             throw new IOException("Could not find successful build for branch " + branchLabel);
@@ -344,10 +344,7 @@ public class GitHubClient {
             this.branch = branch;
             this.fork = repo;
             if (this.fork.contains("/")) {
-                this.fork = repo.split("/")[1];
-            }
-            if (!this.fork.equals("liquibase-pro")) {
-                this.fork = "liquibase";
+                this.fork = repo.split("/")[0];
             }
 
             if (this.branch.contains(":")) {

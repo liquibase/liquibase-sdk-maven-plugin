@@ -36,6 +36,9 @@ public class DownloadSnapshotArtifactsMojo extends AbstractGitHubMojo {
     @Parameter(property = "liquibase.sdk.downloadDirectory", required = true)
     protected String downloadDirectory;
 
+    @Parameter(property = "liquibase.sdk.workflowId")
+    protected String workflowId;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         File downloadDirectory = new File(this.downloadDirectory);
@@ -54,7 +57,7 @@ public class DownloadSnapshotArtifactsMojo extends AbstractGitHubMojo {
                 }
                 log.info("Found matching branch: " + matchingLabel);
 
-                GHWorkflowRun runToDownload = github.findLastBuild(repo, new GitHubClient.BuildFilter(repo, matchingLabel, skipFailedBuilds));
+                GHWorkflowRun runToDownload = github.findLastBuild(repo, new GitHubClient.BuildFilter(repo, matchingLabel, skipFailedBuilds), getWorkflowId(repo, workflowId));
 
                 if (runToDownload == null) {
                     throw new IOException("Could not find successful build for branch " + matchingLabel);
