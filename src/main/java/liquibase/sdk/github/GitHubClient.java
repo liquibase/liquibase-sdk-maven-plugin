@@ -80,6 +80,7 @@ public class GitHubClient {
         Map<String, GHPullRequest> pullRequests = getAllOpenPullRequests(repository);
 
         for (String branch : branches) {
+            branch = this.simplifyBranch(branch);
             Set<String> branchVariations = new LinkedHashSet<>();
             branchVariations.add(branch);
 
@@ -122,6 +123,14 @@ public class GitHubClient {
         return null;
     }
 
+    public static String simplifyBranch(String branch) {
+        if (branch == null) {
+            return null;
+        }
+        return branch.replace("refs/heads/", "")
+                .replace("refs/heads/tags", "");
+    }
+
     private GHRepository getRepository(String repo) throws IOException {
         if (!repo.contains("/")) {
             repo = "liquibase/" + repo;
@@ -156,6 +165,19 @@ public class GitHubClient {
         log.debug("Workflow state: " + workflow.getState());
 
         return findRun(repository, workflow, buildFilter, true, null);
+    }
+
+    /**
+     * Returns null if no builds match
+     */
+    public GHWorkflowRun findBuild(String repo, long runId) throws IOException {
+        GHRepository repository = getRepository(repo);
+        log.debug("Successfully found repository " + repository.getHtmlUrl());
+
+        GHWorkflowRun workflowRun = repository.getWorkflowRun(runId);
+        log.debug("Successfully found run " + runId);
+
+        return workflowRun;
     }
 
     private GHWorkflowRun findRun(GHRepository repository, GHWorkflow workflow, BuildFilter buildFilter, boolean recentOnly, GHWorkflowRun foundFailedRun) throws IOException {
@@ -341,7 +363,7 @@ public class GitHubClient {
          */
         public BuildFilter(String repo, String branch, boolean skipFailedBuilds) {
             this.skipFailedBuilds = skipFailedBuilds;
-            this.branch = branch;
+            this.branch = GitHubClient.simplifyBranch(branch);
             this.fork = repo;
             if (this.fork.contains("/")) {
                 this.fork = repo.split("/")[0];
