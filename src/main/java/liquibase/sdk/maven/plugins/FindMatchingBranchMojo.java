@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * <p>Finds the branch.</p>
  */
-@Mojo(name = "find-matching-branch")
+@Mojo(name = "find-matching-branch", requiresProject = false)
 public class FindMatchingBranchMojo extends AbstractGitHubMojo {
 
     private static final Logger log = LoggerFactory.getLogger(FindMatchingBranchMojo.class);

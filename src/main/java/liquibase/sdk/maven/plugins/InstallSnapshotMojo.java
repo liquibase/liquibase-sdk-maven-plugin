@@ -19,7 +19,7 @@ import java.util.zip.ZipFile;
 /**
  * <p>Installs a snapshot build from the given branch as "0-SNAPSHOT".</p>
  */
-@Mojo(name = "install-snapshot")
+@Mojo(name = "install-snapshot", requiresProject = false)
 public class InstallSnapshotMojo extends AbstractGitHubMojo {
 
     /**
@@ -58,7 +58,7 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                     artifactName = repo.replaceFirst(".*/", "") + "-artifacts";
                 }
 
-                File file = github.downloadArtifact(repo, matchingLabel, artifactName, getWorkflowId(repo, workflowId), skipFailedBuilds);
+                File file = github.downloadArtifact(repo, matchingLabel, artifactName, GitHubClient.getWorkflowId(repo, workflowId), skipFailedBuilds);
 
                 if (file == null) {
                     throw new MojoFailureException("Cannot find " + artifactName + ".zip");

@@ -23,7 +23,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 
-@Mojo(name = "download-snapshot-artifacts")
+@Mojo(name = "download-snapshot-artifacts", requiresProject = false)
 public class DownloadSnapshotArtifactsMojo extends AbstractGitHubMojo {
 
     /**
@@ -70,7 +70,7 @@ public class DownloadSnapshotArtifactsMojo extends AbstractGitHubMojo {
 
                 GHWorkflowRun runToDownload = null;
                 if (StringUtils.trimToNull(runId) == null) {
-                    runToDownload = github.findLastBuild(repo, new GitHubClient.BuildFilter(repo, matchingLabel, skipFailedBuilds), getWorkflowId(repo, workflowId));
+                    runToDownload = github.findLastBuild(repo, new GitHubClient.BuildFilter(repo, matchingLabel, skipFailedBuilds), GitHubClient.getWorkflowId(repo, workflowId));
                 } else {
                     runToDownload = github.findBuild(repo, Long.parseLong(runId));
                 }

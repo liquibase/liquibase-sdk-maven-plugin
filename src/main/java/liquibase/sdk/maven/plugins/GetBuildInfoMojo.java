@@ -13,7 +13,7 @@ import java.util.Properties;
 /**
  * <p>Finds the branch.</p>
  */
-@Mojo(name = "get-build-info")
+@Mojo(name = "get-build-info", requiresProject = false)
 public class GetBuildInfoMojo extends AbstractGitHubMojo {
 
     private static final Logger log = LoggerFactory.getLogger(GetBuildInfoMojo.class);

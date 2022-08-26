@@ -16,7 +16,7 @@ import java.net.URL;
 /**
  * <p>Installs or replaces a CLI with the given release.</p>
  */
-@Mojo(name = "install-release-cli")
+@Mojo(name = "install-release-cli", requiresProject = false)
 public class InstallReleaseCliMojo extends AbstractGitHubMojo {
 
     @Parameter(property = "liquibase.sdk.releaseTag", required = true)

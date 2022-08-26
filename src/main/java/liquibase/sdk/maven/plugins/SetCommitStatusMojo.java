@@ -14,7 +14,7 @@ import java.util.Properties;
 /**
  * <p>Finds the branch.</p>
  */
-@Mojo(name = "set-commit-status")
+@Mojo(name = "set-commit-status", requiresProject = false)
 public class SetCommitStatusMojo extends AbstractGitHubMojo {
 
     private static final Logger log = LoggerFactory.getLogger(SetCommitStatusMojo.class);

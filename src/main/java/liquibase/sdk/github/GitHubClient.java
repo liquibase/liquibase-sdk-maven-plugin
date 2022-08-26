@@ -14,8 +14,10 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.regex.Pattern;
 
 public class GitHubClient {
 
@@ -352,6 +354,79 @@ public class GitHubClient {
         return null;
     }
 
+    public void setPullRequestComment(String repo, String newComment, int pullId, Pattern replaceComment, String mojoVersion) throws IOException {
+        newComment = newComment
+                .replace("\\n", "\n")
+                .replace("\\t", "\t");
+
+        GHRepository repository = getRepository(repo);
+        log.debug("Successfully found repository " + repository.getHtmlUrl());
+
+        GHPullRequest pullRequest = repository.getPullRequest(pullId);
+
+        if (newComment.equals("BUILD_TESTING")) {
+            log.info("Generating 'BUILD_TESTING' comment...");
+            GHWorkflowRun lastBuild = this.findLastBuild(repo, new BuildFilter(repo, pullRequest.getBase().getRef(), false), getWorkflowId(repo, null));
+
+            newComment = "### Testing These Changes\n" +
+                    "To test this PR, use the artifacts attached to the [latest CI build](" + lastBuild.getHtmlUrl() + "#artifacts)\n" +
+                    "\n" +
+                    "#### Artifacts Available:\n" +
+                    "- __" + repository.getName() + "-artifacts:__ Zip containing the .jar file to test\n" +
+                    "- __test-reports-*:__ Detailed automated test results\n" +
+                    "\n" +
+                    "#### Download with liquibase-sdk-maven-plugin\n" +
+                    "Alternately, you can use the [Liquibase SDK Maven Plugin](https://mvnrepository.com/artifact/org.liquibase.ext/liquibase-sdk-maven-plugin)\n\n" +
+                    "##### Download the artifacts\n" +
+                    "```" +
+                    "mvn org.liquibase.ext:liquibase-sdk-maven-plugin:"+mojoVersion+":download-snapshot-artifacts -Dliquibase.sdk.repo=" + repository.getFullName() + " -Dliquibase.sdk.branchSearch=" + pullRequest.getHead().getLabel() + " -Dliquibase.sdk.downloadDirectory=download -Dliquibase.sdk.artifactPattern=*-artifacts -Dliquibase.sdk.unzipArtifacts=true" +
+                    "```\n" +
+                    "##### Install to your local maven cache\n" +
+                    "```" +
+                    "mvn  org.liquibase.ext:liquibase-sdk-maven-plugin:"+mojoVersion+":install-snapshot -Dliquibase.sdk.repo=" + repository.getFullName() + " -Dliquibase.sdk.branchSearch=" + pullRequest.getHead().getLabel() +
+                    "```\n" +
+                    "";
+            replaceComment = Pattern.compile("^#+ Testing These Changes");
+        }
+
+
+        if (replaceComment == null) {
+            log.info("Creating new comment on " + pullRequest.getHtmlUrl());
+            pullRequest.comment(newComment);
+        } else {
+            AtomicBoolean updated = new AtomicBoolean(false);
+            String finalNewComment = newComment;
+
+            Pattern finalReplaceComment = replaceComment;
+            pullRequest.listComments().toList().forEach(comment -> {
+                if (finalReplaceComment.matcher(comment.getBody()).find()) {
+                    try {
+                        log.info("Updating comment on " + pullRequest.getHtmlUrl());
+                        comment.update(finalNewComment);
+                        updated.set(true);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+
+            if (!updated.get()) {
+                log.info("No existing matching comment, creating new comment on " + pullRequest.getHtmlUrl());
+                pullRequest.comment(newComment);
+            }
+        }
+
+    }
+
+    public static String getWorkflowId(String repo, String workflowId) {
+        if (workflowId != null) {
+            return workflowId;
+        }
+        if (repo.endsWith("/liquibase") || repo.endsWith("/liquibase-pro")) {
+            return "build.yml";
+        }
+        return "ci.yml";
+    }
 
     public static class BuildFilter {
         private String fork;

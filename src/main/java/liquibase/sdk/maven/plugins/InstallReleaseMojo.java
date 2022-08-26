@@ -10,7 +10,7 @@ import org.kohsuke.github.GHRelease;
 
 import java.net.URL;
 
-@Mojo(name = "install-release")
+@Mojo(name = "install-release", requiresProject = false)
 public class InstallReleaseMojo extends AbstractGitHubMojo {
 
     @Parameter(property = "liquibase.sdk.releaseTag", required = true)

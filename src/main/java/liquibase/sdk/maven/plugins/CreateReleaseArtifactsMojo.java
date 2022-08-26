@@ -30,7 +30,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-@Mojo(name = "create-release-artifacts")
+@Mojo(name = "create-release-artifacts", requiresProject = false)
 public class CreateReleaseArtifactsMojo extends AbstractMojo {
 
     @Parameter(property = "liquibase.sdk.inputDirectory", required = true)
