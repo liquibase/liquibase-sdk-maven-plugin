@@ -354,7 +354,7 @@ public class GitHubClient {
         return null;
     }
 
-    public void setPullRequestComment(String repo, String newComment, int pullId, Pattern replaceComment, String mojoVersion) throws IOException {
+    public void setPullRequestComment(String repo, String newComment, String pullRef, Pattern replaceComment, String mojoVersion) throws IOException {
         newComment = newComment
                 .replace("\\n", "\n")
                 .replace("\\t", "\t");
@@ -362,7 +362,19 @@ public class GitHubClient {
         GHRepository repository = getRepository(repo);
         log.debug("Successfully found repository " + repository.getHtmlUrl());
 
-        GHPullRequest pullRequest = repository.getPullRequest(pullId);
+        GHPullRequest pullRequest;
+        if (pullRef.startsWith("#")) {
+            pullRequest = repository.getPullRequest(Integer.parseInt(pullRef.substring(1)));
+        } else {
+            List<GHPullRequest> prs = repository.queryPullRequests().head(pullRef).state(GHIssueState.OPEN).list().toList();
+            if (prs.size() == 0) {
+                throw new RuntimeException("Cannot find open PR for branch " + pullRef);
+            } else if (prs.size() > 1) {
+                throw new RuntimeException("Found " + prs.size() + " PRs for branch " + pullRef);
+            } else {
+                pullRequest = prs.get(0);
+            }
+        }
 
         if (newComment.equals("BUILD_TESTING")) {
             log.info("Generating 'BUILD_TESTING' comment...");
@@ -379,11 +391,11 @@ public class GitHubClient {
                     "Alternately, you can use the [Liquibase SDK Maven Plugin](https://mvnrepository.com/artifact/org.liquibase.ext/liquibase-sdk-maven-plugin)\n\n" +
                     "##### Download the artifacts\n" +
                     "```" +
-                    "mvn org.liquibase.ext:liquibase-sdk-maven-plugin:"+mojoVersion+":download-snapshot-artifacts -Dliquibase.sdk.repo=" + repository.getFullName() + " -Dliquibase.sdk.branchSearch=" + pullRequest.getHead().getLabel() + " -Dliquibase.sdk.downloadDirectory=download -Dliquibase.sdk.artifactPattern=*-artifacts -Dliquibase.sdk.unzipArtifacts=true" +
+                    "mvn org.liquibase.ext:liquibase-sdk-maven-plugin:" + mojoVersion + ":download-snapshot-artifacts -Dliquibase.sdk.repo=" + repository.getFullName() + " -Dliquibase.sdk.branchSearch=" + pullRequest.getHead().getLabel() + " -Dliquibase.sdk.downloadDirectory=download -Dliquibase.sdk.artifactPattern=*-artifacts -Dliquibase.sdk.unzipArtifacts=true" +
                     "```\n" +
                     "##### Install to your local maven cache\n" +
                     "```" +
-                    "mvn  org.liquibase.ext:liquibase-sdk-maven-plugin:"+mojoVersion+":install-snapshot -Dliquibase.sdk.repo=" + repository.getFullName() + " -Dliquibase.sdk.branchSearch=" + pullRequest.getHead().getLabel() +
+                    "mvn  org.liquibase.ext:liquibase-sdk-maven-plugin:" + mojoVersion + ":install-snapshot -Dliquibase.sdk.repo=" + repository.getFullName() + " -Dliquibase.sdk.branchSearch=" + pullRequest.getHead().getLabel() +
                     "```\n" +
                     "";
             replaceComment = Pattern.compile("^#+ Testing These Changes");

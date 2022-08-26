@@ -24,8 +24,11 @@ public class SetPullRequestCommentMojo extends AbstractGitHubMojo {
     @Parameter(property = "liquibase.sdk.pr.newComment", required = true)
     protected String newComment;
 
-    @Parameter(property = "liquibase.sdk.pr.id", required = true)
-    protected Integer pullRequestId;
+    /**
+     * The pull request branch name OR "#num" like "#123"
+     */
+    @Parameter(property = "liquibase.sdk.pr.definition", required = true)
+    protected String pullRequestDefinition;
 
     @Parameter(property = "liquibase.sdk.pr.replaceCommentPattern")
     protected String replaceCommentPattern;
@@ -42,7 +45,7 @@ public class SetPullRequestCommentMojo extends AbstractGitHubMojo {
                 replaceComment = Pattern.compile(replaceCommentPattern);
             }
 
-            github.setPullRequestComment(repo, newComment, pullRequestId, replaceComment, mojoVersion);
+            github.setPullRequestComment(repo, newComment, pullRequestDefinition, replaceComment, mojoVersion);
         } catch (Exception e) {
             throw new MojoExecutionException(e.getMessage(), e);
         }
