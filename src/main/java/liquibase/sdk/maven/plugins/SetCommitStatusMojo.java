@@ -1,6 +1,7 @@
 package liquibase.sdk.maven.plugins;
 
 import liquibase.sdk.github.GitHubClient;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -12,7 +13,7 @@ import java.util.Properties;
 
 
 /**
- * <p>Finds the branch.</p>
+ * <p>Sets a github commit status.</p>
  */
 @Mojo(name = "set-commit-status", requiresProject = false)
 public class SetCommitStatusMojo extends AbstractGitHubMojo {
@@ -31,6 +32,12 @@ public class SetCommitStatusMojo extends AbstractGitHubMojo {
     @Parameter(property = "liquibase.sdk.status.url", required = true)
     protected String statusUrl;
 
+    /**
+     * If not set, use commit of installed liquibase
+     */
+    @Parameter(property = "liquibase.sdk.status.commit")
+    protected String statusCommit;
+
     public void execute() throws MojoExecutionException {
         try {
             String repo = getRepo();
@@ -40,14 +47,18 @@ public class SetCommitStatusMojo extends AbstractGitHubMojo {
             final Properties buildInfo = github.getInstalledBuildProperties();
 
             String commit;
-            if (repo.equals("liquibase/liquibase")) {
-                commit = (String) buildInfo.get("build.commit");
-            } else {
-                commit = (String) buildInfo.get("build.pro.commit");
-            }
+            if (StringUtils.trimToNull(statusCommit) == null) {
+                if (repo.equals("liquibase/liquibase")) {
+                    commit = (String) buildInfo.get("build.commit");
+                } else {
+                    commit = (String) buildInfo.get("build.pro.commit");
+                }
 
-            if (commit == null) {
-                throw new MojoExecutionException("Could not find commit in build properties");
+                if (commit == null) {
+                    throw new MojoExecutionException("Could not find commit in build properties");
+                }
+            } else {
+                commit = statusCommit;
             }
 
             log.info("Setting commit status for commit " + commit + " on " + repo);
