@@ -92,16 +92,4 @@ abstract class AbstractGitHubMojo extends AbstractMojo {
                 )
         );
     }
-
-
-    protected String getWorkflowId(String repo, String workflowId) {
-        if (workflowId != null) {
-            return workflowId;
-        }
-        if (repo.endsWith("/liquibase") || repo.endsWith("/liquibase-pro")) {
-            return "build.yml";
-        }
-        return "ci.yml";
-    }
-
 }

@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
 
-@Mojo(name = "download-release-artifacts")
+@Mojo(name = "download-release-artifacts", requiresProject = false)
 public class DownloadReleaseArtifactsMojo extends AbstractGitHubMojo {
 
     @Parameter(property = "liquibase.sdk.releaseTag", required = true)

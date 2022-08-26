@@ -14,7 +14,7 @@ import java.io.IOException;
 /**
  * <p>Installs or replaces a CLI with the given branch search.</p>
  */
-@Mojo(name = "install-snapshot-cli")
+@Mojo(name = "install-snapshot-cli", requiresProject = false)
 public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
 
     /**
@@ -104,7 +104,7 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
     }
 
     private File downloadArtifact(GitHubClient github, String repo, String matchingLabel, String artifactName) throws IOException, MojoFailureException {
-        File file = github.downloadArtifact(repo, matchingLabel, artifactName, getWorkflowId(repo, workflowId), skipFailedBuilds);
+        File file = github.downloadArtifact(repo, matchingLabel, artifactName, GitHubClient.getWorkflowId(repo, workflowId), skipFailedBuilds);
 
         if (file == null) {
             throw new MojoFailureException("Cannot find " + artifactName + ".zip");
