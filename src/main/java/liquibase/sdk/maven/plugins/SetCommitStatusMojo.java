@@ -35,7 +35,7 @@ public class SetCommitStatusMojo extends AbstractGitHubMojo {
     /**
      * If not set, use commit of installed liquibase
      */
-    @Parameter(property = "liquibase.sdk.status.commit")
+    @Parameter(property = "liquibase.sdk.status.commit", required = true)
     protected String statusCommit;
 
     public void execute() throws MojoExecutionException {
@@ -44,10 +44,10 @@ public class SetCommitStatusMojo extends AbstractGitHubMojo {
 
             GitHubClient github = createGitHubClient();
 
-            final Properties buildInfo = github.getInstalledBuildProperties();
-
             String commit;
-            if (StringUtils.trimToNull(statusCommit) == null) {
+            if (StringUtils.trimToNull(statusCommit).equals("installed")) {
+                final Properties buildInfo = github.getInstalledBuildProperties();
+
                 if (repo.equals("liquibase/liquibase")) {
                     commit = (String) buildInfo.get("build.commit");
                 } else {
