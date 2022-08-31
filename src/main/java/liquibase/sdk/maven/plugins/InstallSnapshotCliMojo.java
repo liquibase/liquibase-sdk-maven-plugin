@@ -80,7 +80,7 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
                     }, null);
                 } else {
                     //upgrading an extension
-                    if (repo.equals("liquibase-pro")) {
+                    if (repo.equals("liquibase/liquibase-pro")) {
                         File file = downloadArtifact(github, repo, matchingLabel, "liquibase-commercial-modules");
                         ArchiveUtil.unzipCli(file, liquibaseHomeDir, log,
                                 path -> path.getName().endsWith("liquibase-commercial-0-SNAPSHOT.jar"),
