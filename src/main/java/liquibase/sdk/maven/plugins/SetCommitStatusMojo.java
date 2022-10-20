@@ -46,7 +46,7 @@ public class SetCommitStatusMojo extends AbstractGitHubMojo {
 
             String commit;
             if (StringUtils.trimToNull(statusCommit).equals("installed")) {
-                final Properties buildInfo = github.getInstalledBuildProperties();
+                final Properties buildInfo = github.getInstalledBuildProperties(getRepo());
 
                 if (repo.equals("liquibase/liquibase")) {
                     commit = (String) buildInfo.get("build.commit");
