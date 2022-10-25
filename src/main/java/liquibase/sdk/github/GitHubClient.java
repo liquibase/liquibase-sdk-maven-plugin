@@ -24,6 +24,10 @@ public class GitHubClient {
     private final GitHub github;
     private final Logger log;
     private final String githubToken;
+    private static final String CORE_REPOSITORY = "liquibase";
+    private static final String CORE_ARTIFACT = "liquibase-core";
+    private static final String PRO_REPOSITORY = "liquibase-pro";
+    private static final String PRO_ARTIFACT = "liquibase-commercial";
 
     /**
      * Creates testing client
@@ -82,7 +86,7 @@ public class GitHubClient {
         Map<String, GHPullRequest> pullRequests = getAllOpenPullRequests(repository);
 
         for (String branch : branches) {
-            branch = this.simplifyBranch(branch);
+            branch = simplifyBranch(branch);
             Set<String> branchVariations = new LinkedHashSet<>();
             branchVariations.add(branch);
 
@@ -326,10 +330,13 @@ public class GitHubClient {
         repository.createCommitStatus(sha1, statusState, statusUrl, statusDescription, statusContext);
     }
 
-    public Properties getInstalledBuildProperties() throws IOException {
-        File libraryJar = new File(System.getProperty("user.home") + "/.m2/repository/org/liquibase/liquibase-core/0-SNAPSHOT/liquibase-core-0-SNAPSHOT.jar");
+    public Properties getInstalledBuildProperties(String repo) throws IOException {
+        GHRepository ghRepository = getRepository(repo);
+        String artifactName = handleArtifactName(ghRepository.getName());
+        String m2Location = String.format("/.m2/repository/org/%s/%s/0-SNAPSHOT/%s-0-SNAPSHOT.jar", ghRepository.getOwner().getName(), artifactName, artifactName);
+        File libraryJar = new File(System.getProperty("user.home") + m2Location);
         if (!libraryJar.exists()) {
-            throw new IOException("Could not find jar for liquibase-core at " + libraryJar.getAbsolutePath());
+            throw new IOException(String.format("Could not find jar for %s at %s", artifactName, libraryJar.getAbsolutePath()));
         }
 
         try (final FileInputStream fileInputStream = new FileInputStream(libraryJar);
@@ -474,5 +481,15 @@ public class GitHubClient {
 
     public enum BuildStatusFilter {
         SUCCESS;
+    }
+
+    public String handleArtifactName(String repositoryName) {
+        String artifact = null;
+        if (repositoryName.equalsIgnoreCase(PRO_REPOSITORY)) {
+            artifact = PRO_ARTIFACT;
+        } else if (repositoryName.equalsIgnoreCase(CORE_REPOSITORY)) {
+            artifact = CORE_ARTIFACT;
+        }
+        return artifact != null ? artifact : repositoryName;
     }
 }

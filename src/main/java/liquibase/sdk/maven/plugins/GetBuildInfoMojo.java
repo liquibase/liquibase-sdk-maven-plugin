@@ -26,7 +26,7 @@ public class GetBuildInfoMojo extends AbstractGitHubMojo {
         try {
             GitHubClient github = createGitHubClient();
 
-            final Properties buildInfo = github.getInstalledBuildProperties();
+            final Properties buildInfo = github.getInstalledBuildProperties(getRepo());
             buildInfo.put("overview", "OSS: " + buildInfo.get("build.branch") + "::" + buildInfo.get("build.commit") + " @ " + buildInfo.get("build.timestamp") +
                     " " +
                     "Pro: " + buildInfo.get("build.pro.branch") + "::" + buildInfo.get("build.pro.commit") + " @ " + buildInfo.get("build.pro.timestamp"))
