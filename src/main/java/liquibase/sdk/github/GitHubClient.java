@@ -333,7 +333,7 @@ public class GitHubClient {
     public Properties getInstalledBuildProperties(String repo) throws IOException {
         GHRepository ghRepository = getRepository(repo);
         String artifactName = handleArtifactName(ghRepository.getName());
-        String m2Location = String.format("/.m2/repository/org/%s/%s/0-SNAPSHOT/%s-0-SNAPSHOT.jar", ghRepository.getOwner().getName(), artifactName, artifactName);
+        String m2Location = String.format("/.m2/repository/org/%s/%s/0-SNAPSHOT/%s-0-SNAPSHOT.jar", ghRepository.getOwner().getName().toLowerCase(), artifactName, artifactName);
         File libraryJar = new File(System.getProperty("user.home") + m2Location);
         if (!libraryJar.exists()) {
             throw new IOException(String.format("Could not find jar for %s at %s", artifactName, libraryJar.getAbsolutePath()));
