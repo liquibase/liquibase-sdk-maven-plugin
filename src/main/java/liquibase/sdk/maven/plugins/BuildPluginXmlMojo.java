@@ -30,6 +30,9 @@ public class BuildPluginXmlMojo extends AbstractMojo {
     @Parameter(required = true)
     private File liquibaseClassesDir;
 
+    @Parameter(required = false)
+    private File liquibaseProClassesDir;
+
     @Parameter(required = true)
     private File outputFile;
 
@@ -57,9 +60,20 @@ public class BuildPluginXmlMojo extends AbstractMojo {
             Element mojosElement = pluginXml.createElement("mojos");
             pluginElement.appendChild(mojosElement);
 
-            URLClassLoader classloader = new URLClassLoader(new URL[]{
-                    liquibaseClassesDir.toURI().toURL()
-            });
+            URLClassLoader classloader;
+            if (liquibaseProClassesDir != null && liquibaseProClassesDir.exists()) {
+                classloader =
+                        new URLClassLoader(new URL[]{
+                                liquibaseClassesDir.toURI().toURL(),
+                                liquibaseProClassesDir.toURI().toURL()
+                        });
+            } else {
+                classloader =
+                        new URLClassLoader(new URL[]{
+                                liquibaseClassesDir.toURI().toURL()
+                        });
+
+            }
 
             Thread.currentThread().setContextClassLoader(classloader);
             Object scope = classloader.loadClass("liquibase.Scope")
@@ -93,7 +107,7 @@ public class BuildPluginXmlMojo extends AbstractMojo {
                 addNode("aggregator", "false", mojoElement, pluginXml);
                 addNode("requiresOnline", "false", mojoElement, pluginXml);
                 addNode("inheritedByDefault", "true", mojoElement, pluginXml);
-                addNode("implementation", "org.liquibase.maven.plugins.LiquibaseCommandMojo", mojoElement, pluginXml);
+                addNode("implementation", "org.liquibase.maven.plugins.LiquibaseMojo", mojoElement, pluginXml);
                 addNode("language", "java", mojoElement, pluginXml);
                 addNode("instantiationStrategy", "per-lookup", mojoElement, pluginXml);
                 addNode("executionStrategy", "once-per-session", mojoElement, pluginXml);
