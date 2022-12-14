@@ -59,7 +59,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <targetMavenVersion>3.8.1</targetMavenVersion>
+        <targetMavenVersion>3.8.6</targetMavenVersion>
     </properties>
     <dependencies>
         <dependency>
