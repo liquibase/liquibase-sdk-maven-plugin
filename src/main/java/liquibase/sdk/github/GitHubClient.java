@@ -25,7 +25,7 @@ public class GitHubClient {
     private final Logger log;
     private final String githubToken;
     private static final String CORE_REPOSITORY = "liquibase";
-    private static final String CORE_ARTIFACT = "liquibase-core";
+    private static final String CORE_ARTIFACT = "liquibase-standard";
     private static final String PRO_REPOSITORY = "liquibase-pro";
     private static final String PRO_ARTIFACT = "liquibase-commercial";
 
