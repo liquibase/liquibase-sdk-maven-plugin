@@ -68,7 +68,7 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
 
                 if (repo.endsWith("/liquibase")) {
                     //replace everything in the CLI except liquibase-commercial.jar
-                    String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-_]", "_");
+                    String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-_.]", "_");
 
                     File file = downloadArtifact(github, repo, matchingLabel, "liquibase-zip-" + headBranchFilename);
 
