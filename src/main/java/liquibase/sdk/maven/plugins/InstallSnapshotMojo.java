@@ -34,6 +34,9 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
     @Parameter(property = "liquibase.sdk.workflowId")
     protected String workflowId;
 
+    @Parameter(property = "liquibase.sdk.proWorkflowId")
+    protected String proWorkflowId;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
 
         for (String repo : getRepos()) {
@@ -49,16 +52,20 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                 log.info("Found matching branch: " + matchingLabel);
 
                 final String artifactName;
+                final String currentWorkflowId;
                 if (repo.endsWith("/liquibase")) {
                     String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-.]", "_");
                     artifactName = "liquibase-artifacts-" + headBranchFilename;
+                    currentWorkflowId = workflowId;
                 } else if (repo.equals("liquibase/liquibase-pro")) {
                     artifactName = "liquibase-commercial-modules";
+                    currentWorkflowId = proWorkflowId;
                 } else {
                     artifactName = repo.replaceFirst(".*/", "") + "-artifacts";
+                    currentWorkflowId = null;
                 }
 
-                File file = github.downloadArtifact(repo, matchingLabel, artifactName, GitHubClient.getWorkflowId(repo, workflowId), skipFailedBuilds);
+                File file = github.downloadArtifact(repo, matchingLabel, artifactName, GitHubClient.getWorkflowId(repo, currentWorkflowId), skipFailedBuilds);
 
                 if (file == null) {
                     throw new MojoFailureException("Cannot find " + artifactName + ".zip");
