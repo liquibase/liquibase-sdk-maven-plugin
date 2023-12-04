@@ -35,6 +35,9 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
     @Parameter(property = "liquibase.sdk.workflowId")
     protected String workflowId;
 
+    @Parameter(property = "liquibase.sdk.proWorkflowId")
+    protected String proWorkflowId;
+
     public void execute() throws MojoExecutionException, MojoFailureException {
         File liquibaseHomeDir = new File(liquibaseHome);
         if (liquibaseHomeDir.exists()) {
@@ -70,7 +73,7 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
                     //replace everything in the CLI except liquibase-commercial.jar
                     String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-_.]", "_");
 
-                    File file = downloadArtifact(github, repo, matchingLabel, "liquibase-zip-" + headBranchFilename);
+                    File file = downloadArtifact(github, repo, matchingLabel, "liquibase-zip-" + headBranchFilename, workflowId);
 
                     ArchiveUtil.unzipCli(file, liquibaseHomeDir, log, path -> {
                         if (path.getName().equals("internal/lib/liquibase-commercial.jar")) {
@@ -81,7 +84,7 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
                 } else {
                     //upgrading an extension
                     if (repo.equals("liquibase/liquibase-pro")) {
-                        File file = downloadArtifact(github, repo, matchingLabel, "liquibase-commercial-modules");
+                        File file = downloadArtifact(github, repo, matchingLabel, "liquibase-commercial-modules", proWorkflowId);
                         ArchiveUtil.unzipCli(file, liquibaseHomeDir, log,
                                 path -> path.getName().endsWith("liquibase-commercial-0-SNAPSHOT.jar"),
                                 path -> {
@@ -103,8 +106,8 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
         }
     }
 
-    private File downloadArtifact(GitHubClient github, String repo, String matchingLabel, String artifactName) throws IOException, MojoFailureException {
-        File file = github.downloadArtifact(repo, matchingLabel, artifactName, GitHubClient.getWorkflowId(repo, workflowId), skipFailedBuilds);
+    private File downloadArtifact(GitHubClient github, String repo, String matchingLabel, String artifactName, String currentWorkflowId) throws IOException, MojoFailureException {
+        File file = github.downloadArtifact(repo, matchingLabel, artifactName, GitHubClient.getWorkflowId(repo, currentWorkflowId), skipFailedBuilds);
 
         if (file == null) {
             throw new MojoFailureException("Cannot find " + artifactName + ".zip");

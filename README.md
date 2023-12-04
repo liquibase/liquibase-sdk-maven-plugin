@@ -39,8 +39,8 @@ By default, it expects it to be an upgrade, unless `allowInstall` / `liquibase.s
 The branch to use is set via the liquibase.sdk.branchSearch setting. To install a branch from a fork, reference it as `owner:branch-name`
 
 Examples:
-- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.9:install-cli "-Dliquibase.sdk.branchSearch=local-branch,master"` to install the code from `liquibase/liquibase:local-branch` and if that branch doesn't exist fall back to `master`
-- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.9:install-cli "-Dliquibase.sdk.branchSearch=fork-owner:their-branch"` to install the code from `fork-owner/liquibase:their-branch`
+- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.9:install-snapshot-cli "-Dliquibase.sdk.branchSearch=local-branch,master"` to install the code from `liquibase/liquibase:local-branch` and if that branch doesn't exist fall back to `master`
+- `mvn org.liquibase.ext:liquibase-sdk-maven-plugin:0.9:install-snapshot-cli "-Dliquibase.sdk.branchSearch=fork-owner:their-branch"` to install the code from `fork-owner/liquibase:their-branch`
 
 All available arguments:
 
