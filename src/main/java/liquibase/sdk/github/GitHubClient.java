@@ -6,6 +6,7 @@ import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ProtocolException;
 import org.kohsuke.github.*;
 import org.slf4j.Logger;
 
@@ -304,23 +305,36 @@ public class GitHubClient {
         File file = File.createTempFile("liquibase-sdk-" + url.getPath().replaceFirst(".*/", "").replaceAll("\\W", "_") + "-", "." + extension);
 
         //archive.download() threw timeout errors too often. So using httpClient instead
-        try (CloseableHttpClient httpclient = HttpClients.createDefault()) {
-            HttpGet httpGet = new HttpGet(url.toURI());
-            httpGet.addHeader("Authorization", "token " + githubToken);
-
-            try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
-                if (response.getCode() != 200) {
-                    throw new IOException("Non-200 response: " + response.getCode() + " " + response.getReasonPhrase());
-                }
-
-                try (OutputStream out = new FileOutputStream(file)) {
-                    response.getEntity().writeTo(out);
-                }
+        try (CloseableHttpClient httpclient = HttpClients.custom()
+                .disableRedirectHandling()
+                .build()) {
+            CloseableHttpResponse response = getResponse(url, httpclient, false);
+            try (OutputStream out = new FileOutputStream(file)) {
+                response.getEntity().writeTo(out);
             }
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
         return file;
+    }
+
+    private CloseableHttpResponse getResponse(URL url, CloseableHttpClient httpclient, boolean skipAuth) throws URISyntaxException, IOException {
+        HttpGet httpGet = new HttpGet(url.toURI());
+        if (!skipAuth) {
+            httpGet.addHeader("Authorization", "token " + githubToken);
+        }
+
+        try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
+            if (response.getCode() == 302) {
+                return getResponse(new URL(response.getHeader("Location").getValue()), httpclient, true);
+            }
+            if (response.getCode() != 200) {
+                throw new IOException("Non-200 response: " + response.getCode() + " " + response.getReasonPhrase());
+            }
+            return response;
+        } catch (ProtocolException e) {
+            throw new IOException(e);
+        }
     }
 
     public void setCommitStatus(String repo, String sha1, GHCommitState statusState, String statusContext, String statusDescription, String statusUrl) throws IOException {
