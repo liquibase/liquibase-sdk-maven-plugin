@@ -308,17 +308,14 @@ public class GitHubClient {
         try (CloseableHttpClient httpclient = HttpClients.custom()
                 .disableRedirectHandling()
                 .build()) {
-            CloseableHttpResponse response = getResponse(url, httpclient, false);
-            try (OutputStream out = new FileOutputStream(file)) {
-                response.getEntity().writeTo(out);
-            }
+            getResponse(url, httpclient, file, false);
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
         return file;
     }
 
-    private CloseableHttpResponse getResponse(URL url, CloseableHttpClient httpclient, boolean skipAuth) throws URISyntaxException, IOException {
+    private void getResponse(URL url, CloseableHttpClient httpclient, File file, boolean skipAuth) throws URISyntaxException, IOException {
         HttpGet httpGet = new HttpGet(url.toURI());
         if (!skipAuth) {
             httpGet.addHeader("Authorization", "token " + githubToken);
@@ -326,12 +323,14 @@ public class GitHubClient {
 
         try (CloseableHttpResponse response = httpclient.execute(httpGet)) {
             if (response.getCode() == 302) {
-                return getResponse(new URL(response.getHeader("Location").getValue()), httpclient, true);
-            }
-            if (response.getCode() != 200) {
+                getResponse(new URL(response.getHeader("Location").getValue()), httpclient, file, true);
+                return;
+            } else if (response.getCode() != 200) {
                 throw new IOException("Non-200 response: " + response.getCode() + " " + response.getReasonPhrase());
             }
-            return response;
+            try (OutputStream out = new FileOutputStream(file)) {
+                response.getEntity().writeTo(out);
+            }
         } catch (ProtocolException e) {
             throw new IOException(e);
         }
