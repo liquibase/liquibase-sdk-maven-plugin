@@ -6,6 +6,10 @@ on:
         description: 'Version (example: 4.8.2)'
         required: true
 
+permissions:
+  contents: write
+  id-token: write
+  
 jobs:
   setup:
     name: Setup

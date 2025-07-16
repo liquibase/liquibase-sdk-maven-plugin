@@ -8,6 +8,10 @@ on:
         description: 'Release Tag'
         required: true
 
+permissions:
+  contents: write
+  id-token: write
+  
 jobs:
   setup:
     name: Setup
