@@ -30,19 +30,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Configure AWS credentials for vault access
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.LIQUIBASE_VAULT_OIDC_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Get secrets from vault
+        id: vault-secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            ,/vault/liquibase
+          parse-json-secrets: true
+
+      - name: Convert escaped newlines and set GPG key
+        run: |
+          {
+            echo "GPG_KEY_CONTENT<<GPG_EOF"
+            printf '%b' "${{ env.GPG_SECRET }}"
+            echo
+            echo "GPG_EOF"
+          } >> $GITHUB_ENV
+
       - name: Set up JDK for GPG
         uses: actions/setup-java@v2
         with:
           java-version: '8'
           distribution: 'adopt'
-          gpg-private-key: ${{ secrets.GPG_SECRET }}
+          gpg-private-key: ${{ env.GPG_KEY_CONTENT }}
           gpg-passphrase: GPG_PASSPHRASE
         env:
-          GPG_PASSWORD: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSWORD: ${{ env.GPG_PASSPHRASE }}
 
       - name: Create Artifacts
         env:
-          GPG_PASSWORD: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSWORD: ${{ env.GPG_PASSPHRASE }}
         run: |
           mvn -B versions:set -DnewVersion=${{ needs.setup.outputs.version }}
           mvn -B package
