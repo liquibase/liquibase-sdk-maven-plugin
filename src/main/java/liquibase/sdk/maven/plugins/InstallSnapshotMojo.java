@@ -57,9 +57,10 @@ public class InstallSnapshotMojo extends AbstractGitHubMojo {
                     String headBranchFilename = matchingLabel.replaceFirst(".*:", "").replaceAll("[^a-zA-Z0-9\\-.]", "_");
                     artifactName = "liquibase-artifacts-" + headBranchFilename;
                     currentWorkflowId = workflowId;
-                } else if (repo.equals("liquibase/liquibase-pro")) {
-                    artifactName = "liquibase-commercial-modules";
-                    currentWorkflowId = proWorkflowId;
+                // DISABLED: liquibase-pro operations are disabled
+                // } else if (repo.equals("liquibase/liquibase-pro")) {
+                //     artifactName = "liquibase-commercial-modules";
+                //     currentWorkflowId = proWorkflowId;
                 } else {
                     artifactName = repo.replaceFirst(".*/", "") + "-artifacts";
                     currentWorkflowId = null;

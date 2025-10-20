@@ -83,19 +83,20 @@ public class InstallSnapshotCliMojo extends AbstractGitHubMojo {
                     }, null);
                 } else {
                     //upgrading an extension
-                    if (repo.equals("liquibase/liquibase-pro")) {
-                        File file = downloadArtifact(github, repo, matchingLabel, "liquibase-commercial-modules", proWorkflowId);
-                        ArchiveUtil.unzipCli(file, liquibaseHomeDir, log,
-                                path -> path.getName().endsWith("liquibase-commercial-0-SNAPSHOT.jar"),
-                                path -> {
-                                    if (path.equals("liquibase-commercial-0-SNAPSHOT.jar")) {
-                                        return "internal/lib/liquibase-commercial.jar";
-                                    }
-                                    return path;
-                                });
-                    } else {
+                    // DISABLED: liquibase-pro operations are disabled
+                    // if (repo.equals("liquibase/liquibase-pro")) {
+                    //     File file = downloadArtifact(github, repo, matchingLabel, "liquibase-commercial-modules", proWorkflowId);
+                    //     ArchiveUtil.unzipCli(file, liquibaseHomeDir, log,
+                    //             path -> path.getName().endsWith("liquibase-commercial-0-SNAPSHOT.jar"),
+                    //             path -> {
+                    //                 if (path.equals("liquibase-commercial-0-SNAPSHOT.jar")) {
+                    //                     return "internal/lib/liquibase-commercial.jar";
+                    //                 }
+                    //                 return path;
+                    //             });
+                    // } else {
                         throw new MojoExecutionException("Unknown repo: " + repo);
-                    }
+                    // }
                 }
 
             } catch (MojoExecutionException | MojoFailureException e) {
