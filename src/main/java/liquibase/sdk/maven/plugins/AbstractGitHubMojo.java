@@ -50,12 +50,18 @@ abstract class AbstractGitHubMojo extends AbstractMojo {
 
     /**
      * Returns the value from "repo" but split on commas.
+     * DISABLED: liquibase-pro repos are filtered out
      */
     protected List<String> getRepos() {
         List<String> returnList = new ArrayList<>();
         for (String name : repo.split(",")) {
             if (!name.contains("/")) {
                 name = "liquibase/" + name;
+            }
+            // DISABLED: Filter out liquibase-pro repositories
+            if (name.equals("liquibase/liquibase-pro") || name.equals("liquibase-pro")) {
+                log.warn("Skipping liquibase-pro repository (liquibase-pro operations are disabled)");
+                continue;
             }
             returnList.add(name);
         }
