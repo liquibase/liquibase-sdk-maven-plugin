@@ -43,14 +43,14 @@ jobs:
   deploy_maven:
     name: Deploy to Maven
     needs: [ setup ]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Download release assets
         uses: robinraju/release-downloader@v1.2
         with:
           repository: "liquibase/liquibase-sdk-maven-plugin"
           tag: "${{ needs.setup.outputs.tag }}"
-          filename: "*"
+          fileName: "*"
           out-file-path: "."
 
       - name: Configure AWS credentials for vault access
