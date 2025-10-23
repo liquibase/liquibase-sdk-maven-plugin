@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Download release assets
-        uses: robinraju/release-downloader@v1.2
+        uses: robinraju/release-downloader@v1.12
         with:
           repository: "liquibase/liquibase-sdk-maven-plugin"
           tag: "${{ needs.setup.outputs.tag }}"
@@ -54,7 +54,7 @@ jobs:
           out-file-path: "."
 
       - name: Configure AWS credentials for vault access
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ secrets.LIQUIBASE_VAULT_OIDC_ROLE_ARN }}
           aws-region: us-east-1
@@ -66,6 +66,13 @@ jobs:
           secret-ids: |
             ,/vault/liquibase
           parse-json-secrets: true
+
+      - name: Debug - Check environment variables
+        run: |
+          echo "Checking for Sonatype credentials..."
+          env | grep -i sonatype || echo "No SONATYPE variables found"
+          env | grep -i liquibase || echo "No LIQUIBASE variables found"
+          env | grep -i gpg || echo "No GPG variables found"
 
       - name: Convert escaped newlines and set GPG key
         run: |
