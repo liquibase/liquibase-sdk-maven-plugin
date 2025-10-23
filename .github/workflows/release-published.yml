@@ -1,119 +1,17 @@
-name: Release Published
+name: Release Extension to Sonatype
+
 on:
+  workflow_dispatch:
   release:
     types: [published]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release Tag'
-        required: true
 
 permissions:
   contents: write
+  pull-requests: write
+  packages: write
   id-token: write
   
 jobs:
-  setup:
-    name: Setup
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.collect-data.outputs.tag }}
-      version: ${{ steps.collect-data.outputs.version }}
-    steps:
-      - name: Collect Data
-        id: collect-data
-        uses: actions/github-script@v4
-        with:
-          script: |
-            let tag;
-            if (context.payload.inputs) {
-              tag = context.payload.inputs.tag;
-            } else {
-              tag = context.payload.release.tag_name;
-            }
-
-            let version = tag.replace(/^v/, "");
-
-            core.setOutput("tag", tag);
-            core.setOutput("version", version);
-
-      - run: |
-          echo "Publishing version ${{ steps.collect-data.outputs.version }} from ${{ steps.collect-data.outputs.tag }}"
-
-  deploy_maven:
-    name: Deploy to Maven
-    needs: [ setup ]
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Download release assets
-        uses: robinraju/release-downloader@v1.12
-        with:
-          repository: "liquibase/liquibase-sdk-maven-plugin"
-          tag: "${{ needs.setup.outputs.tag }}"
-          fileName: "*"
-          out-file-path: "."
-
-      - name: Configure AWS credentials for vault access
-        uses: aws-actions/configure-aws-credentials@v5
-        with:
-          role-to-assume: ${{ secrets.LIQUIBASE_VAULT_OIDC_ROLE_ARN }}
-          aws-region: us-east-1
-
-      - name: Get secrets from vault
-        id: vault-secrets
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: |
-            ,/vault/liquibase
-          parse-json-secrets: true
-
-      - name: Debug - Check environment variables
-        run: |
-          echo "Checking for Sonatype credentials..."
-          env | grep -i sonatype || echo "No SONATYPE variables found"
-          env | grep -i liquibase || echo "No LIQUIBASE variables found"
-          env | grep -i gpg || echo "No GPG variables found"
-
-      - name: Convert escaped newlines and set GPG key
-        run: |
-          {
-            echo "GPG_KEY_CONTENT<<GPG_EOF"
-            printf '%b' "${{ env.GPG_SECRET }}"
-            echo
-            echo "GPG_EOF"
-          } >> $GITHUB_ENV
-
-      - name: Set up Java for publishing to Maven Central Repository
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-          server-id: sonatype-nexus-staging
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ env.GPG_KEY_CONTENT }}
-          gpg-passphrase: GPG_PASSPHRASE
-        env:
-          GPG_PASSWORD: ${{ env.GPG_PASSPHRASE }}
-
-      - name: Stage to Sonatype
-        env:
-          MAVEN_USERNAME: ${{ env.SONATYPE_USERNAME }}
-          MAVEN_PASSWORD: ${{ env.SONATYPE_TOKEN }}
-          GPG_PASSWORD: ${{ env.GPG_PASSPHRASE }}
-        run: |
-          version=${{ needs.setup.outputs.version }}
-
-          mvn -B org.apache.maven.plugins:maven-deploy-plugin:3.0.0-M1:deploy-file \
-            -Durl=https://oss.sonatype.org/service/local/staging/deploy/maven2/ \
-            -DrepositoryId=sonatype-nexus-staging \
-            -DpomFile=liquibase-sdk-maven-plugin-${version}.pom.xml \
-            -DgeneratePom=false \
-            -Dfile=liquibase-sdk-maven-plugin-${version}.jar \
-            -Dsources=liquibase-sdk-maven-plugin-${version}-sources.jar \
-            -Djavadoc=liquibase-sdk-maven-plugin-${version}-javadoc.jar \
-            -Dfiles=liquibase-sdk-maven-plugin-${version}.jar.asc,liquibase-sdk-maven-plugin-${version}-sources.jar.asc,liquibase-sdk-maven-plugin-${version}-javadoc.jar.asc,liquibase-sdk-maven-plugin-${version}.pom.xml.asc \
-            -Dtypes=jar.asc,jar.asc,jar.asc,pom.asc \
-            -Dclassifiers=,sources,javadoc,
-
-          echo "File has been staged to sonatype. It must be manually closed and released when ready"
+  release:
+    uses: liquibase/build-logic/.github/workflows/extension-release-published.yml@main
+    secrets: inherit
