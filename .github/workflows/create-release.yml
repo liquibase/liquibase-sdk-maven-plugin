@@ -18,4 +18,6 @@ permissions:
 jobs:
   create-release:
     uses: liquibase/build-logic/.github/workflows/create-release.yml@main
+    with: 
+      sonar: false
     secrets: inherit
