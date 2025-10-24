@@ -264,6 +264,36 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Copy POM file to target directory for GPG signing and release artifact attachment.
+                 The reusable workflow extension-attach-artifact-release.yml expects the POM file
+                 to be available in target/ with the naming pattern ${artifactId}-${version}.pom
+                 for signing and uploading to GitHub releases and Maven Central.
+
+                 Note: Other Liquibase extension projects inherit this functionality from
+                 liquibase-parent-pom which uses copy-rename-maven-plugin in the coverage profile.
+                 Since this project does not use the parent POM, we implement it directly using
+                 maven-antrun-plugin. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-pom-to-target</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <copy file="${project.basedir}/pom.xml"
+                                      tofile="${project.build.directory}/${project.artifactId}-${project.version}.pom"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
