@@ -60,6 +60,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <targetMavenVersion>3.8.6</targetMavenVersion>
+        <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
+        <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
+        <versions-maven-plugin.version>2.19.0</versions-maven-plugin.version>
+        <build-helper-maven-plugin.version>3.6.1</build-helper-maven-plugin.version>
     </properties>
     <dependencies>
         <dependency>
@@ -190,6 +194,40 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven-release-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${maven-jar-plugin.version}</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Specification-Title>Liquibase</Specification-Title>
+                            <Specification-Version>${liquibase.version}</Specification-Version>
+                            <Specification-Vendor>Liquibase.org</Specification-Vendor>
+                            <Implementation-Title>${project.artifactId}-${project.version}</Implementation-Title>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-Vendor>Liquibase</Implementation-Vendor>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${versions-maven-plugin.version}</version>
+                <configuration>
+                    <generateBackupPoms>false</generateBackupPoms>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${build-helper-maven-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-plugin-plugin</artifactId>
                 <version>3.6.0</version>
                 <executions>
@@ -229,7 +267,7 @@
                 <configuration>
                     <attach>true</attach>
                     <author>false</author>
-                    <doctitle>Liquibase ${version} SDK API</doctitle>
+                    <doctitle>Liquibase ${project.version} SDK API</doctitle>
                     <quiet>true</quiet>
                     <doclint>none</doclint>
                     <encoding>UTF-8</encoding>
