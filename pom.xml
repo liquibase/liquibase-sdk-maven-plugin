@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.liquibase.ext</groupId>
     <artifactId>liquibase-sdk-maven-plugin</artifactId>
-    <version>0.11.0-SNAPSHOT</version>
+    <version>0.12.0-SNAPSHOT</version>
 
     <packaging>maven-plugin</packaging>
     <name>Liquibase SDK Maven Plugin</name>
@@ -52,7 +51,8 @@
         <connection>scm:git:git@github.com:liquibase/liquibase-sdk-maven-plugin.git</connection>
         <url>scm:git:git@github.com:liquibase/liquibase-sdk-maven-plugin.git</url>
         <developerConnection>scm:git:git@github.com:liquibase/liquibase-sdk-maven-plugin.git</developerConnection>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -287,8 +287,7 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="${project.basedir}/pom.xml"
-                                      tofile="${project.build.directory}/${project.artifactId}-${project.version}.pom"/>
+                                <copy file="${project.basedir}/pom.xml" tofile="${project.build.directory}/${project.artifactId}-${project.version}.pom" />
                             </target>
                         </configuration>
                     </execution>
